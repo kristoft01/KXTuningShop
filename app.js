@@ -129,7 +129,6 @@ const old=document.getElementById('checkoutForm');
 if(old) old.remove();
 
 const form=document.createElement('div');
-
 form.id='checkoutForm';
 form.className='checkout-form';
 
@@ -265,15 +264,11 @@ const projectsResult=await sb
 const productsResult=await sb
 .from('products')
 .select('*')
-.eq('available',true)
 .order('created_at',{ascending:false});
 
 const services=servicesResult.data;
 const projects=projectsResult.data;
 const products=productsResult.data;
-
-console.log('PRODUSE:',products);
-console.log('EROARE PRODUSE:',productsResult.error);
 
 const s=services?.length
 ?services
@@ -337,9 +332,11 @@ if(productsBox){
 ```
 if(productsResult.error){
 
+  console.error('Eroare produse:',productsResult.error);
+
   productsBox.innerHTML=`
     <div class="empty">
-      Eroare la încărcarea produselor.
+      Nu am putut încărca produsele.
     </div>
   `;
 
@@ -402,7 +399,7 @@ if(productsResult.error){
 
   productsBox.innerHTML=`
     <div class="empty">
-      Nu există produse disponibile momentan.
+      Nu există produse momentan.
     </div>
   `;
 
@@ -447,5 +444,43 @@ f.addEventListener('submit',async e=>{
       :null,
     service:fd.get('serviciu'),
     message:
-      `Motoriza
+      `Motorizare: ${fd.get('motor')||'-'}\n`+
+      `${fd.get('detalii')||''}`
+  };
+
+  const {error}=await sb
+    .from('quote_requests')
+    .insert(q);
+
+  const msg=document.getElementById('success');
+
+  if(error){
+
+    msg.textContent=
+      'Nu am putut trimite cererea. Încearcă WhatsApp.';
+
+    document.getElementById('formWhatsApp').href=
+      whatsapp(
+        `Salut! Vreau o ofertă pentru `+
+        `${q.car_make} ${q.car_model}. `+
+        `${q.service}. ${q.message}`
+      );
+
+    return;
+  }
+
+  msg.textContent=
+    'Cererea a fost trimisă! Te vom contacta cât mai repede.';
+
+  document.getElementById('formWhatsApp').href=
+    whatsapp(
+      `Salut! Am trimis o cerere pe site pentru `+
+      `${q.car_make} ${q.car_model}.`
+    );
+
+  f.reset();
+});
 ```
+
+}
+});
