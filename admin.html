@@ -3,9 +3,7 @@
 <html lang="ro">
 
 <head>
-
   <meta charset="utf-8">
-
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
   <title>KXTuningShop | Administrare</title>
@@ -13,15 +11,11 @@
   <link rel="stylesheet" href="styles.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 </head>
-
 
 <body class="admin-body">
 
-
 <div class="admin-layout">
-
 
   <aside>
 
@@ -31,37 +25,34 @@
       PANOU ADMINISTRARE
     </div>
 
-
     <button data-tab="dash" class="active">
       ⌂ Panou principal
     </button>
-
 
     <button data-tab="products">
       ▣ Piese auto
     </button>
 
-
     <button data-tab="services">
       ⚙ Servicii
     </button>
 
-
     <button data-tab="projects">
       ▤ Lucrări
     </button>
-
 
     <button data-tab="quotes">
       ✉ Cereri ofertă
       <i id="badge">0</i>
     </button>
 
+    <button data-tab="orders">
+      🛒 Comenzi
+    </button>
 
     <a href="index.html">
       ↗ Vezi site-ul
     </a>
-
 
     <button id="logout">
       ⇥ Deconectare
@@ -69,9 +60,7 @@
 
   </aside>
 
-
   <section class="admin-content">
-
 
     <header>
 
@@ -85,7 +74,6 @@
 
     </header>
 
-
     <div id="dash" class="tab"></div>
 
     <div id="products" class="tab hidden"></div>
@@ -96,17 +84,14 @@
 
     <div id="quotes" class="tab hidden"></div>
 
+    <div id="orders" class="tab hidden"></div>
 
   </section>
 
-
 </div>
 
-
 <script src="app.js"></script>
-
 <script src="admin.js"></script>
-
 
 </body>
 </html>
