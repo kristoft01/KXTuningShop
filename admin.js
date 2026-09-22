@@ -1,34 +1,95 @@
-```javascript
-const tables={products:{label:'Piese auto',fields:['name','description','price','category','image_url','available']},services:{label:'Servicii',fields:['name','description','price_from','image_url','active']},projects:{label:'Lucrări',fields:['title','description','car_make','car_model','service','image_url']}};
-let current='dash';
+const tables = {
+  products: {
+    label: 'Piese auto',
+    fields: ['name', 'description', 'price', 'category', 'image_url', 'available']
+  },
+  services: {
+    label: 'Servicii',
+    fields: ['name', 'description', 'price_from', 'image_url', 'active']
+  },
+  projects: {
+    label: 'Lucrări',
+    fields: ['title', 'description', 'car_make', 'car_model', 'service', 'image_url']
+  }
+};
 
-function aesc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+let current = 'dash';
 
-async function requireUser(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session){showLogin();return null;}
-  document.getElementById('adminUser').textContent=session.user.email||'Administrator';
+function aesc(s = '') {
+  return String(s).replace(/[&<>'"]/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[c]));
+}
+
+async function requireUser() {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    showLogin();
+    return null;
+  }
+
+  document.getElementById('adminUser').textContent =
+    session.user.email || 'Administrator';
+
   return session;
 }
 
-function showLogin(){
-  document.body.innerHTML=`<div class="login"><img src="logo.jpg"><div class="login-box"><h1>ADMIN KXTUNINGSHOP</h1><p>Intră în panoul de administrare.</p><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Parolă"><button class="btn primary" id="loginBtn">INTRĂ ÎN PANOU</button><p id="loginMsg"></p><a href="index.html">← Înapoi la site</a></div></div>`;
-  document.getElementById('loginBtn').onclick=async()=>{
-    const {error}=await sb.auth.signInWithPassword({email:email.value,password:password.value});
-    loginMsg.textContent=error?error.message:'';
-    if(!error)location.reload();
+function showLogin() {
+  document.body.innerHTML = `
+    <div class="login">
+      <img src="logo.jpg">
+      <div class="login-box">
+        <h1>ADMIN KXTUNINGSHOP</h1>
+        <p>Intră în panoul de administrare.</p>
+
+        <input id="email" type="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Parolă">
+
+        <button class="btn primary" id="loginBtn">
+          INTRĂ ÎN PANOU
+        </button>
+
+        <p id="loginMsg"></p>
+
+        <a href="index.html">← Înapoi la site</a>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('loginBtn').onclick = async () => {
+    const { error } = await sb.auth.signInWithPassword({
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value
+    });
+
+    document.getElementById('loginMsg').textContent =
+      error ? error.message : '';
+
+    if (!error) {
+      location.reload();
+    }
   };
 }
 
-async function count(t){
-  const {count}=await sb.from(t).select('*',{count:'exact',head:true});
-  return count||0;
+async function count(t) {
+  const { count } = await sb
+    .from(t)
+    .select('*', { count: 'exact', head: true });
+
+  return count || 0;
 }
 
-async function renderDash(){
-  const [p,s,pr,q,o]=await Promise.all(['products','services','projects','quote_requests','orders'].map(count));
+async function renderDash() {
+  const [p, s, pr, q, o] = await Promise.all(
+    ['products', 'services', 'projects', 'quote_requests', 'orders'].map(count)
+  );
 
-  dash.innerHTML=`
+  document.getElementById('dash').innerHTML = `
     <div class="page-head">
       <div>
         <div class="eyebrow">KXTUNINGSHOP</div>
@@ -46,45 +107,92 @@ async function renderDash(){
 
     <div class="panel">
       <h2>Acțiuni rapide</h2>
+
       <div class="quick">
-        <button onclick="openTab('products')">+ Adaugă produs</button>
-        <button onclick="openTab('services')">+ Adaugă serviciu</button>
-        <button onclick="openTab('projects')">+ Adaugă lucrare</button>
-        <button onclick="openTab('quotes')">Vezi cereri</button>
-        <button onclick="openTab('orders')">🛒 Vezi comenzi</button>
+        <button onclick="openTab('products')">
+          + Adaugă produs
+        </button>
+
+        <button onclick="openTab('services')">
+          + Adaugă serviciu
+        </button>
+
+        <button onclick="openTab('projects')">
+          + Adaugă lucrare
+        </button>
+
+        <button onclick="openTab('quotes')">
+          Vezi cereri
+        </button>
+
+        <button onclick="openTab('orders')">
+          🛒 Vezi comenzi
+        </button>
       </div>
     </div>
   `;
 }
 
-async function renderTable(tab){
-  const cfg=tables[tab];
-  const {data,error}=await sb.from(tab).select('*').order('created_at',{ascending:false});
+async function renderTable(tab) {
+  const cfg = tables[tab];
 
-  if(error){
-    document.getElementById(tab).innerHTML=`<p class="error">${aesc(error.message)}</p>`;
+  const { data, error } = await sb
+    .from(tab)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    document.getElementById(tab).innerHTML =
+      `<p class="error">${aesc(error.message)}</p>`;
     return;
   }
 
-  const rows=(data||[]).map(x=>`
+  const rows = (data || []).map(x => `
     <tr>
-      <td><b>${aesc(x.name||x.title)}</b></td>
-      <td>${aesc(x.description||x.service||'')}</td>
-      <td>${x.price!=null?aesc(x.price)+' lei':x.price_from!=null?'de '+aesc(x.price_from)+' lei':''}</td>
       <td>
-        <button onclick='editItem(${JSON.stringify(tab)},${JSON.stringify(x)})'>Editează</button>
-        <button class="danger" onclick='deleteItem(${JSON.stringify(tab)},${JSON.stringify(x.id)})'>Șterge</button>
+        <b>${aesc(x.name || x.title)}</b>
+      </td>
+
+      <td>
+        ${aesc(x.description || x.service || '')}
+      </td>
+
+      <td>
+        ${
+          x.price != null
+            ? aesc(x.price) + ' lei'
+            : x.price_from != null
+              ? 'de ' + aesc(x.price_from) + ' lei'
+              : ''
+        }
+      </td>
+
+      <td>
+        <button onclick='editItem(${JSON.stringify(tab)},${JSON.stringify(x)})'>
+          Editează
+        </button>
+
+        <button
+          class="danger"
+          onclick='deleteItem(${JSON.stringify(tab)},${JSON.stringify(x.id)})'>
+          Șterge
+        </button>
       </td>
     </tr>
   `).join('');
 
-  document.getElementById(tab).innerHTML=`
+  document.getElementById(tab).innerHTML = `
     <div class="page-head">
       <div>
         <div class="eyebrow">ADMIN</div>
         <h1>${cfg.label}</h1>
       </div>
-      <button class="btn primary" onclick='newItem("${tab}")'>+ ADAUGĂ</button>
+
+      <button
+        class="btn primary"
+        onclick='newItem("${tab}")'>
+        + ADAUGĂ
+      </button>
     </div>
 
     <div class="panel">
@@ -97,18 +205,25 @@ async function renderTable(tab){
             <th></th>
           </tr>
         </thead>
+
         <tbody>
-          ${rows||'<tr><td colspan="4">Nu există elemente.</td></tr>'}
+          ${
+            rows ||
+            '<tr><td colspan="4">Nu există elemente.</td></tr>'
+          }
         </tbody>
       </table>
     </div>
   `;
 }
 
-async function renderQuotes(){
-  const {data,error}=await sb.from('quote_requests').select('*').order('created_at',{ascending:false});
+async function renderQuotes() {
+  const { data, error } = await sb
+    .from('quote_requests')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-  quotes.innerHTML=`
+  document.getElementById('quotes').innerHTML = `
     <div class="page-head">
       <div>
         <div class="eyebrow">ADMIN</div>
@@ -129,34 +244,63 @@ async function renderQuotes(){
         </thead>
 
         <tbody>
-          ${error
-            ? `<tr><td colspan="5">${aesc(error.message)}</td></tr>`
-            : (data||[]).map(x=>`
-              <tr>
-                <td><b>${aesc(x.name)}</b></td>
-                <td>${aesc(x.car_make)} ${aesc(x.car_model)} ${x.car_year||''}</td>
-                <td>${aesc(x.service)}</td>
-                <td><a href="tel:${aesc(x.phone)}">${aesc(x.phone)}</a></td>
-                <td>${new Date(x.created_at).toLocaleString('ro-RO')}</td>
-              </tr>
-            `).join('')||'<tr><td colspan="5">Nicio cerere.</td></tr>'
+          ${
+            error
+              ? `<tr>
+                  <td colspan="5">${aesc(error.message)}</td>
+                </tr>`
+              : (
+                  (data || []).map(x => `
+                    <tr>
+                      <td>
+                        <b>${aesc(x.name)}</b>
+                      </td>
+
+                      <td>
+                        ${aesc(x.car_make)}
+                        ${aesc(x.car_model)}
+                        ${x.car_year || ''}
+                      </td>
+
+                      <td>
+                        ${aesc(x.service)}
+                      </td>
+
+                      <td>
+                        <a href="tel:${aesc(x.phone)}">
+                          ${aesc(x.phone)}
+                        </a>
+                      </td>
+
+                      <td>
+                        ${new Date(x.created_at).toLocaleString('ro-RO')}
+                      </td>
+                    </tr>
+                  `).join('')
+                ) ||
+                '<tr><td colspan="5">Nicio cerere.</td></tr>'
           }
         </tbody>
       </table>
     </div>
   `;
 
-  badge.textContent=(data||[]).length;
+  document.getElementById('badge').textContent =
+    (data || []).length;
 }
 
-async function updateOrderStatus(id,status){
-  const {error}=await sb
+async function updateOrderStatus(id, status) {
+  const { error } = await sb
     .from('orders')
-    .update({status:status})
-    .eq('id',id);
+    .update({ status: status })
+    .eq('id', id);
 
-  if(error){
-    alert('Nu s-a putut modifica statusul comenzii: '+error.message);
+  if (error) {
+    alert(
+      'Nu s-a putut modifica statusul comenzii: ' +
+      error.message
+    );
+
     renderOrders();
     return;
   }
@@ -164,57 +308,62 @@ async function updateOrderStatus(id,status){
   renderOrders();
 }
 
-async function renderOrders(){
-  const {data,error}=await sb
+async function renderOrders() {
+  const { data, error } = await sb
     .from('orders')
     .select('*')
-    .order('created_at',{ascending:false});
+    .order('created_at', { ascending: false });
 
-  if(error){
-    document.getElementById('orders').innerHTML=`
+  if (error) {
+    document.getElementById('orders').innerHTML = `
       <div class="page-head">
         <div>
           <div class="eyebrow">ADMIN</div>
           <h1>Comenzi</h1>
         </div>
       </div>
+
       <div class="panel">
         <p class="error">${aesc(error.message)}</p>
       </div>
     `;
+
     return;
   }
 
-  const orders=data||[];
-  let rows='';
+  const orders = data || [];
+  let rows = '';
 
-  for(const order of orders){
-    const {data:items,error:itemError}=await sb
+  for (const order of orders) {
+    const {
+      data: items,
+      error: itemError
+    } = await sb
       .from('order_items')
       .select('*')
-      .eq('order_id',order.id)
-      .order('created_at',{ascending:true});
+      .eq('order_id', order.id)
+      .order('created_at', { ascending: true });
 
-    const products=itemError
+    const products = itemError
       ? 'Eroare la produsele comenzii'
-      : (items||[]).length
-        ? (items||[]).map(item=>
+      : (items || []).length
+        ? (items || []).map(item =>
             `${aesc(item.product_name)} × ${aesc(item.quantity)} — ${aesc(item.price)} lei`
           ).join('<br>')
         : 'Fără produse';
 
-    const status=order.status||'noua';
+    const status = order.status || 'noua';
 
-    rows+=`
+    rows += `
       <tr>
         <td>
-          <b>${aesc(order.customer_name||'Client')}</b>
+          <b>${aesc(order.customer_name || 'Client')}</b>
           <br>
-          ${aesc(order.customer_phone||'')}
+          ${aesc(order.customer_phone || '')}
         </td>
 
         <td>
-          ${aesc(order.customer_address||'')}
+          ${aesc(order.customer_address || '')}
         </td>
 
         <td>
@@ -222,28 +371,50 @@ async function renderOrders(){
         </td>
 
         <td>
-          <b>${aesc(order.total||0)} lei</b>
+          <b>${aesc(order.total || 0)} lei</b>
         </td>
 
         <td>
-          <select onchange="updateOrderStatus('${aesc(order.id)}',this.value)">
-            <option value="noua" ${status==='noua'?'selected':''}>🆕 Nouă</option>
-            <option value="procesare" ${status==='procesare'?'selected':''}>🔧 În procesare</option>
-            <option value="finalizata" ${status==='finalizata'?'selected':''}>✅ Finalizată</option>
-            <option value="anulata" ${status==='anulata'?'selected':''}>❌ Anulată</option>
+          <select
+            onchange="updateOrderStatus('${aesc(order.id)}', this.value)">
+            <option
+              value="noua"
+              ${status === 'noua' ? 'selected' : ''}>
+              🆕 Nouă
+            </option>
+
+            <option
+              value="procesare"
+              ${status === 'procesare' ? 'selected' : ''}>
+              🔧 În procesare
+            </option>
+
+            <option
+              value="finalizata"
+              ${status === 'finalizata' ? 'selected' : ''}>
+              ✅ Finalizată
+            </option>
+
+            <option
+              value="anulata"
+              ${status === 'anulata' ? 'selected' : ''}>
+              ❌ Anulată
+            </option>
           </select>
         </td>
 
         <td>
-          ${order.created_at
-            ? new Date(order.created_at).toLocaleString('ro-RO')
-            : ''}
+          ${
+            order.created_at
+              ? new Date(order.created_at).toLocaleString('ro-RO')
+              : ''
+          }
         </td>
       </tr>
     `;
   }
 
-  document.getElementById('orders').innerHTML=`
+  document.getElementById('orders').innerHTML = `
     <div class="page-head">
       <div>
         <div class="eyebrow">ADMIN</div>
@@ -265,143 +436,233 @@ async function renderOrders(){
         </thead>
 
         <tbody>
-          ${rows||'<tr><td colspan="6">Nu există comenzi.</td></tr>'}
+          ${
+            rows ||
+            '<tr><td colspan="6">Nu există comenzi.</td></tr>'
+          }
         </tbody>
       </table>
     </div>
   `;
 }
 
-function modal(html){
-  const d=document.createElement('div');
-  d.className='modal-wrap';
-  d.innerHTML=`<div class="modal"><button class="x" onclick="this.closest('.modal-wrap').remove()">×</button>${html}</div>`;
+function modal(html) {
+  const d = document.createElement('div');
+
+  d.className = 'modal-wrap';
+
+  d.innerHTML = `
+    <div class="modal">
+      <button
+        class="x"
+        onclick="this.closest('.modal-wrap').remove()">
+        ×
+      </button>
+
+      ${html}
+    </div>
+  `;
+
   document.body.appendChild(d);
 }
 
-window.newItem=tab=>{
-  const c=tables[tab];
+window.newItem = tab => {
+  const c = tables[tab];
 
-  const fields=c.fields.map(f=>
-    `<label>${f}<input name="${f}" ${['available','active'].includes(f)?'type="checkbox" checked':''}></label>`
-  ).join('');
+  const fields = c.fields.map(f => `
+    <label>
+      ${f}
+      <input
+        name="${f}"
+        ${
+          ['available', 'active'].includes(f)
+            ? 'type="checkbox" checked'
+            : ''
+        }>
+    </label>
+  `).join('');
 
   modal(`
     <h2>Adaugă ${c.label}</h2>
+
     <form id="itemForm">
       ${fields}
-      <button class="btn primary">SALVEAZĂ</button>
+
+      <button class="btn primary">
+        SALVEAZĂ
+      </button>
     </form>
   `);
 
-  itemForm.onsubmit=async e=>{
+  document.getElementById('itemForm').onsubmit = async e => {
     e.preventDefault();
 
-    const o={};
+    const o = {};
 
-    for(const f of c.fields){
-      const el=itemForm.elements[f];
-      o[f]=el.type==='checkbox'?el.checked:el.value||null;
+    for (const f of c.fields) {
+      const el = document.getElementById('itemForm').elements[f];
 
-      if(['price','price_from'].includes(f)&&o[f])
-        o[f]=Number(o[f]);
+      o[f] =
+        el.type === 'checkbox'
+          ? el.checked
+          : el.value || null;
+
+      if (
+        ['price', 'price_from'].includes(f) &&
+        o[f]
+      ) {
+        o[f] = Number(o[f]);
+      }
     }
 
-    const {error}=await sb.from(tab).insert(o);
+    const { error } = await sb
+      .from(tab)
+      .insert(o);
 
-    if(error)
+    if (error) {
       alert(error.message);
-    else{
+    } else {
       document.querySelector('.modal-wrap').remove();
       renderTable(tab);
     }
   };
 };
 
-window.editItem=(tab,x)=>{
-  const c=tables[tab];
+window.editItem = (tab, x) => {
+  const c = tables[tab];
 
-  const fields=c.fields.map(f=>
-    `<label>${f}<input name="${f}" ${['available','active'].includes(f)?'type="checkbox"':''} ${['available','active'].includes(f)?(x[f]?'checked':''):`value="${aesc(x[f]??'')}"`}></label>`
-  ).join('');
+  const fields = c.fields.map(f => `
+    <label>
+      ${f}
+
+      <input
+        name="${f}"
+        ${
+          ['available', 'active'].includes(f)
+            ? 'type="checkbox"'
+            : ''
+        }
+
+        ${
+          ['available', 'active'].includes(f)
+            ? (x[f] ? 'checked' : '')
+            : `value="${aesc(x[f] ?? '')}"`
+        }>
+    </label>
+  `).join('');
 
   modal(`
     <h2>Editează ${c.label}</h2>
+
     <form id="itemForm">
       ${fields}
-      <button class="btn primary">SALVEAZĂ</button>
+
+      <button class="btn primary">
+        SALVEAZĂ
+      </button>
     </form>
   `);
 
-  itemForm.onsubmit=async e=>{
+  document.getElementById('itemForm').onsubmit = async e => {
     e.preventDefault();
 
-    const o={};
+    const o = {};
 
-    for(const f of c.fields){
-      const el=itemForm.elements[f];
-      o[f]=el.type==='checkbox'?el.checked:el.value||null;
+    for (const f of c.fields) {
+      const el = document.getElementById('itemForm').elements[f];
 
-      if(['price','price_from'].includes(f)&&o[f])
-        o[f]=Number(o[f]);
+      o[f] =
+        el.type === 'checkbox'
+          ? el.checked
+          : el.value || null;
+
+      if (
+        ['price', 'price_from'].includes(f) &&
+        o[f]
+      ) {
+        o[f] = Number(o[f]);
+      }
     }
 
-    const {error}=await sb.from(tab).update(o).eq('id',x.id);
+    const { error } = await sb
+      .from(tab)
+      .update(o)
+      .eq('id', x.id);
 
-    if(error)
+    if (error) {
       alert(error.message);
-    else{
+    } else {
       document.querySelector('.modal-wrap').remove();
       renderTable(tab);
     }
   };
 };
 
-window.deleteItem=async(tab,id)=>{
-  if(!confirm('Sigur vrei să ștergi?'))return;
+window.deleteItem = async (tab, id) => {
+  if (!confirm('Sigur vrei să ștergi?')) {
+    return;
+  }
 
-  const {error}=await sb.from(tab).delete().eq('id',id);
+  const { error } = await sb
+    .from(tab)
+    .delete()
+    .eq('id', id);
 
-  if(error)
+  if (error) {
     alert(error.message);
-  else
+  } else {
     renderTable(tab);
+  }
 };
 
-window.openTab=async tab=>{
-  current=tab;
+window.openTab = async tab => {
+  current = tab;
 
-  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));
-  document.getElementById(tab).classList.remove('hidden');
+  document
+    .querySelectorAll('.tab')
+    .forEach(x => x.classList.add('hidden'));
 
-  document.querySelectorAll('aside button[data-tab]').forEach(x=>
-    x.classList.toggle('active',x.dataset.tab===tab)
-  );
+  document
+    .getElementById(tab)
+    .classList.remove('hidden');
 
-  if(tab==='dash')
+  document
+    .querySelectorAll('aside button[data-tab]')
+    .forEach(x =>
+      x.classList.toggle(
+        'active',
+        x.dataset.tab === tab
+      )
+    );
+
+  if (tab === 'dash') {
     renderDash();
-  else if(tab==='quotes')
+  } else if (tab === 'quotes') {
     renderQuotes();
-  else if(tab==='orders')
+  } else if (tab === 'orders') {
     renderOrders();
-  else
+  } else {
     renderTable(tab);
+  }
 };
 
-document.addEventListener('DOMContentLoaded',async()=>{
-  const u=await requireUser();
+document.addEventListener('DOMContentLoaded', async () => {
+  const u = await requireUser();
 
-  if(!u)return;
+  if (!u) {
+    return;
+  }
 
-  document.querySelectorAll('aside button[data-tab]').forEach(b=>
-    b.onclick=()=>openTab(b.dataset.tab)
-  );
+  document
+    .querySelectorAll('aside button[data-tab]')
+    .forEach(b => {
+      b.onclick = () => openTab(b.dataset.tab);
+    });
 
-  document.getElementById('logout').onclick=async()=>{
+  document.getElementById('logout').onclick = async () => {
     await sb.auth.signOut();
     location.reload();
   };
 
   openTab('dash');
 });
-```
