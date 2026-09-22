@@ -1,4 +1,3 @@
-```javascript
 const tables = {
   products: {
     label: 'Piese auto',
@@ -753,6 +752,4 @@ document.addEventListener(
       };
 
     openTab('dash');
-  }
-);
-```
+  });
