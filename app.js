@@ -1,89 +1,292 @@
-const SUPABASE_URL='https://kgcareaxamxisilmwyvi.supabase.co';
-const SUPABASE_KEY='sb_publishable_oXGqd9Xf9u50GeQcsY8G2g_1X639MFE';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_URL = 'https://kgcareaxamxisilmwyvi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_oXGqd9Xf9u50GeQcsY8G2g_1X639MFE';
 
-const WA='40753911677';
+const sb = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-const fallbackServices=[
-  ['Interior Custom','Retapițare plafon, stâlpi și fețe de uși • Alcantara • colantări'],
-  ['Ambient & Light Design','Lumini ambientale premium • plafon înstelat • stele în uși'],
-  ['Personalizare','Centuri colorate • design interior unic • elemente custom'],
-  ['Multimedia & Audio','Navigații CarPlay • camere reverse • sisteme audio'],
-  ['Detailing','Detailing interior complet • polish faruri'],
-  ['Service & Software','Mentenanță • diagnoză • codări & adaptări']
+const WA = '40753911677';
+
+
+/* ========================================================
+   SERVICII FALLBACK
+======================================================== */
+
+const fallbackServices = [
+
+  [
+    'Interior Custom',
+    'Retapițare plafon, stâlpi și fețe de uși • Alcantara • colantări'
+  ],
+
+  [
+    'Ambient & Light Design',
+    'Lumini ambientale premium • plafon înstelat • stele în uși'
+  ],
+
+  [
+    'Personalizare',
+    'Centuri colorate • design interior unic • elemente custom'
+  ],
+
+  [
+    'Multimedia & Audio',
+    'Navigații CarPlay • camere reverse • sisteme audio'
+  ],
+
+  [
+    'Detailing',
+    'Detailing interior complet • polish faruri'
+  ],
+
+  [
+    'Service & Software',
+    'Mentenanță • diagnoză • codări & adaptări'
+  ]
+
 ];
 
-let cart=JSON.parse(localStorage.getItem('kxCart')||'[]');
 
-function esc(s=''){
-  return String(s).replace(/[&<>'"]/g,c=>({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    "'":'&#39;',
-    '"':'&quot;'
-  }[c]));
+/* ========================================================
+   PRODUSE
+======================================================== */
+
+let allProducts = [];
+
+let filteredProducts = [];
+
+let selectedCategory = 'all';
+
+let visibleProducts = 12;
+
+const PRODUCTS_PER_PAGE = 12;
+
+
+/* ========================================================
+   COȘ
+======================================================== */
+
+let cart = JSON.parse(
+  localStorage.getItem('kxCart') || '[]'
+);
+
+
+/* ========================================================
+   ESCAPE HTML
+======================================================== */
+
+function esc(s = '') {
+
+  return String(s).replace(
+    /[&<>'"]/g,
+    c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[c])
+  );
+
 }
 
-function saveCart(){
-  localStorage.setItem('kxCart',JSON.stringify(cart));
+
+/* ========================================================
+   NORMALIZARE TEXT PENTRU CĂUTARE
+======================================================== */
+
+function normalizeText(value = '') {
+
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+}
+
+
+/* ========================================================
+   MENIU MOBIL
+======================================================== */
+
+function toggleMobileMenu() {
+
+  const menu =
+    document.getElementById('mobileMenu');
+
+  if (!menu) return;
+
+  const willOpen =
+    menu.classList.contains('hidden');
+
+  menu.classList.toggle('hidden');
+
+  document.body.classList.toggle(
+    'no-scroll',
+    willOpen
+  );
+
+}
+
+
+function closeMobileMenu() {
+
+  const menu =
+    document.getElementById('mobileMenu');
+
+  if (!menu) return;
+
+  menu.classList.add('hidden');
+
+  document.body.classList.remove(
+    'no-scroll'
+  );
+
+}
+
+
+/* ========================================================
+   COȘ - SALVARE
+======================================================== */
+
+function saveCart() {
+
+  localStorage.setItem(
+    'kxCart',
+    JSON.stringify(cart)
+  );
+
   updateCartUI();
+
 }
 
-function cartCount(){
-  return cart.reduce((sum,item)=>sum+item.quantity,0);
-}
 
-function cartTotal(){
+/* ========================================================
+   NUMĂR PRODUSE ÎN COȘ
+======================================================== */
+
+function cartCount() {
+
   return cart.reduce(
-    (sum,item)=>sum+(Number(item.price)||0)*item.quantity,
+    (sum, item) =>
+      sum + Number(item.quantity || 0),
     0
   );
+
 }
 
-function updateCartUI(){
-  const count=document.getElementById('cartCount');
 
-  if(count){
-    count.textContent=cartCount();
+/* ========================================================
+   TOTAL COȘ
+======================================================== */
+
+function cartTotal() {
+
+  return cart.reduce(
+
+    (sum, item) =>
+      sum +
+      (Number(item.price) || 0) *
+      Number(item.quantity || 0),
+
+    0
+
+  );
+
+}
+
+
+/* ========================================================
+   ACTUALIZARE COȘ
+======================================================== */
+
+function updateCartUI() {
+
+  const count =
+    document.getElementById('cartCount');
+
+  if (count) {
+
+    count.textContent =
+      cartCount();
+
   }
 
-  const total=document.getElementById('cartTotal');
 
-  if(total){
-    total.textContent=cartTotal().toFixed(2)+' lei';
+  const total =
+    document.getElementById('cartTotal');
+
+  if (total) {
+
+    total.textContent =
+      cartTotal().toFixed(2) + ' lei';
+
   }
 
-  const box=document.getElementById('cartItems');
 
-  if(!box) return;
+  const box =
+    document.getElementById('cartItems');
 
-  if(!cart.length){
-    box.innerHTML='<div class="empty">Coșul este gol.</div>';
+  if (!box) return;
+
+
+  if (!cart.length) {
+
+    box.innerHTML = `
+      <div class="empty">
+        Coșul este gol.
+      </div>
+    `;
+
     return;
+
   }
 
-  box.innerHTML=cart.map(item=>`
+
+  box.innerHTML = cart.map(item => `
+
     <div class="cart-item">
 
       <div>
-        <strong>${esc(item.name)}</strong>
-        <small>${Number(item.price).toFixed(2)} lei / buc.</small>
+
+        <strong>
+          ${esc(item.name)}
+        </strong>
+
+        <small>
+          ${Number(item.price).toFixed(2)} lei / buc.
+        </small>
+
       </div>
+
 
       <div class="cart-controls">
 
-        <button onclick="changeQuantity('${item.id}',-1)">
+        <button
+          type="button"
+          onclick="changeQuantity('${item.id}', -1)"
+        >
           −
         </button>
 
-        <span>${item.quantity}</span>
 
-        <button onclick="changeQuantity('${item.id}',1)">
+        <span>
+          ${item.quantity}
+        </span>
+
+
+        <button
+          type="button"
+          onclick="changeQuantity('${item.id}', 1)"
+        >
           +
         </button>
 
+
         <button
+          type="button"
           class="danger"
           onclick="removeFromCart('${item.id}')"
         >
@@ -93,155 +296,310 @@ function updateCartUI(){
       </div>
 
     </div>
+
   `).join('');
+
 }
 
-function addToCart(product){
 
-  const existing=cart.find(
-    item=>item.id===product.id
-  );
+/* ========================================================
+   DESCHIDE / ÎNCHIDE COȘ
+======================================================== */
 
-  if(existing){
+function toggleCart() {
 
-    existing.quantity++;
+  const overlay =
+    document.getElementById('cartOverlay');
 
-  }else{
+  if (!overlay) return;
 
-    cart.push({
-      id:product.id,
-      name:product.name,
-      price:Number(product.price)||0,
-      quantity:1
-    });
 
-  }
+  const willOpen =
+    overlay.classList.contains('hidden');
 
-  saveCart();
 
-  const box=document.getElementById('cartBox');
+  if (willOpen) {
 
-  if(box){
-    box.classList.remove('hidden');
-  }
-}
+    overlay.classList.remove('hidden');
 
-function changeQuantity(id,change){
+    document.body.classList.add(
+      'no-scroll'
+    );
 
-  const item=cart.find(
-    item=>item.id===id
-  );
+  } else {
 
-  if(!item) return;
+    overlay.classList.add('hidden');
 
-  item.quantity+=change;
-
-  if(item.quantity<=0){
-
-    cart=cart.filter(
-      item=>item.id!==id
+    document.body.classList.remove(
+      'no-scroll'
     );
 
   }
 
-  saveCart();
+
+  updateCartUI();
+
 }
 
-function removeFromCart(id){
 
-  cart=cart.filter(
-    item=>item.id!==id
+/* ========================================================
+   ÎNCHIDE COȘ DIN FUNDAL
+======================================================== */
+
+function closeCartFromOverlay(event) {
+
+  const overlay =
+    document.getElementById('cartOverlay');
+
+  if (!overlay) return;
+
+
+  if (event.target === overlay) {
+
+    overlay.classList.add('hidden');
+
+    document.body.classList.remove(
+      'no-scroll'
+    );
+
+  }
+
+}
+
+
+/* ========================================================
+   ADAUGĂ ÎN COȘ
+======================================================== */
+
+function addToCart(product) {
+
+  const existing =
+    cart.find(
+      item =>
+        String(item.id) ===
+        String(product.id)
+    );
+
+
+  if (existing) {
+
+    existing.quantity++;
+
+  } else {
+
+    cart.push({
+
+      id: product.id,
+
+      name: product.name,
+
+      price:
+        Number(product.price) || 0,
+
+      quantity: 1
+
+    });
+
+  }
+
+
+  saveCart();
+
+
+  /*
+    Deschidem automat coșul după adăugare.
+    Clientul vede imediat că produsul a intrat.
+  */
+
+  const overlay =
+    document.getElementById('cartOverlay');
+
+  if (
+    overlay &&
+    overlay.classList.contains('hidden')
+  ) {
+
+    overlay.classList.remove('hidden');
+
+    document.body.classList.add(
+      'no-scroll'
+    );
+
+  }
+
+}
+
+
+/* ========================================================
+   SCHIMBĂ CANTITATE
+======================================================== */
+
+function changeQuantity(id, change) {
+
+  const item =
+    cart.find(
+      item =>
+        String(item.id) === String(id)
+    );
+
+
+  if (!item) return;
+
+
+  item.quantity += change;
+
+
+  if (item.quantity <= 0) {
+
+    cart = cart.filter(
+      item =>
+        String(item.id) !== String(id)
+    );
+
+  }
+
+
+  saveCart();
+
+}
+
+
+/* ========================================================
+   ȘTERGE DIN COȘ
+======================================================== */
+
+function removeFromCart(id) {
+
+  cart = cart.filter(
+    item =>
+      String(item.id) !== String(id)
   );
 
   saveCart();
+
 }
 
-function toggleCart(){
 
-  const box=document.getElementById('cartBox');
+/* ========================================================
+   CHECKOUT
+======================================================== */
 
-  if(box){
-    box.classList.toggle('hidden');
-  }
+function openCheckout() {
 
-  updateCartUI();
-}
-
-function openCheckout(){
-
-  if(!cart.length){
+  if (!cart.length) {
 
     alert('Coșul este gol.');
 
     return;
+
   }
 
-  const box=document.getElementById('cartBox');
 
-  if(!box) return;
+  const box =
+    document.getElementById('cartItems');
 
-  const old=document.getElementById('checkoutForm');
+  if (!box) return;
 
-  if(old){
+
+  const old =
+    document.getElementById(
+      'checkoutForm'
+    );
+
+
+  if (old) {
+
     old.remove();
+
   }
 
-  const form=document.createElement('div');
 
-  form.id='checkoutForm';
-  form.className='checkout-form';
+  const form =
+    document.createElement('div');
 
-  form.innerHTML=`
+
+  form.id =
+    'checkoutForm';
+
+  form.className =
+    'checkout-form';
+
+
+  form.innerHTML = `
 
     <div class="eyebrow">
       DATE CLIENT
     </div>
 
+
     <h3>
       Finalizează comanda
     </h3>
 
+
     <label>
+
       Nume*
+
       <input
         id="checkoutName"
         required
+        autocomplete="name"
         placeholder="Numele tău"
       >
+
     </label>
 
+
     <label>
+
       Telefon*
+
       <input
         id="checkoutPhone"
+        type="tel"
         required
+        autocomplete="tel"
         placeholder="07xx xxx xxx"
       >
+
     </label>
 
+
     <label>
+
       Adresă de livrare*
+
       <textarea
         id="checkoutAddress"
         required
+        autocomplete="street-address"
         placeholder="Stradă, număr, localitate, județ"
       ></textarea>
+
     </label>
 
+
     <label>
+
       Observații
+
       <textarea
         id="checkoutNotes"
         placeholder="Detalii suplimentare despre comandă"
       ></textarea>
+
     </label>
+
 
     <button
       class="btn primary"
+      type="button"
       onclick="placeOrder()"
     >
       PLASEAZĂ COMANDA →
     </button>
+
 
     <p
       id="checkoutMessage"
@@ -250,175 +608,239 @@ function openCheckout(){
 
   `;
 
+
   box.appendChild(form);
 
-  form.scrollIntoView({
-    behavior:'smooth',
-    block:'center'
-  });
-}
 
-async function placeOrder(){
+  setTimeout(() => {
 
-  if(!cart.length){
-    return;
-  }
+    form.scrollIntoView({
 
-  const name=
-    document.getElementById('checkoutName')
-      ?.value
-      .trim();
+      behavior: 'smooth',
 
-  const phone=
-    document.getElementById('checkoutPhone')
-      ?.value
-      .trim();
-
-  const address=
-    document.getElementById('checkoutAddress')
-      ?.value
-      .trim();
-
-  const notes=
-    document.getElementById('checkoutNotes')
-      ?.value
-      .trim() || '';
-
-  const message=
-    document.getElementById('checkoutMessage');
-
-  if(!name || !phone || !address){
-
-    message.textContent=
-      'Completează numele, telefonul și adresa.';
-
-    message.className='error';
-
-    return;
-  }
-
-  message.textContent=
-    'Se trimite comanda...';
-
-  message.className='success';
-
-  const total=cartTotal();
-
-  const orderId=crypto.randomUUID();
-
-  const {error:orderError}=await sb
-    .from('orders')
-    .insert({
-
-      id:orderId,
-
-      customer_name:name,
-
-      customer_phone:phone,
-
-      customer_address:address,
-
-      total:total,
-
-      status:'new',
-
-      notes:notes
+      block: 'start'
 
     });
 
-  if(orderError){
+  }, 100);
+
+}
+
+
+/* ========================================================
+   PLASEAZĂ COMANDA
+======================================================== */
+
+async function placeOrder() {
+
+  if (!cart.length) return;
+
+
+  const name =
+    document
+      .getElementById('checkoutName')
+      ?.value
+      .trim();
+
+
+  const phone =
+    document
+      .getElementById('checkoutPhone')
+      ?.value
+      .trim();
+
+
+  const address =
+    document
+      .getElementById('checkoutAddress')
+      ?.value
+      .trim();
+
+
+  const notes =
+    document
+      .getElementById('checkoutNotes')
+      ?.value
+      .trim() || '';
+
+
+  const message =
+    document.getElementById(
+      'checkoutMessage'
+    );
+
+
+  if (!message) return;
+
+
+  if (!name || !phone || !address) {
+
+    message.textContent =
+      'Completează numele, telefonul și adresa.';
+
+    message.className =
+      'error';
+
+    return;
+
+  }
+
+
+  message.textContent =
+    'Se trimite comanda...';
+
+  message.className =
+    'success';
+
+
+  const total =
+    cartTotal();
+
+
+  const orderId =
+    crypto.randomUUID();
+
+
+  /* =========================
+     SALVARE COMANDĂ
+  ========================= */
+
+  const {
+    error: orderError
+  } = await sb
+    .from('orders')
+    .insert({
+
+      id: orderId,
+
+      customer_name: name,
+
+      customer_phone: phone,
+
+      customer_address: address,
+
+      total: total,
+
+      status: 'new',
+
+      notes: notes
+
+    });
+
+
+  if (orderError) {
 
     console.error(
       'Eroare creare comandă:',
       orderError
     );
 
-    message.textContent=
+
+    message.textContent =
       'Nu am putut trimite comanda. Încearcă din nou.';
 
-    message.className='error';
+    message.className =
+      'error';
 
     return;
+
   }
 
-  const items=cart.map(item=>({
 
-    order_id:orderId,
+  /* =========================
+     PRODUSE COMANDĂ
+  ========================= */
 
-    product_id:item.id,
+  const items =
+    cart.map(item => ({
 
-    product_name:item.name,
+      order_id: orderId,
 
-    quantity:item.quantity,
+      product_id: item.id,
 
-    price:Number(item.price)||0
+      product_name: item.name,
 
-  }));
+      quantity: item.quantity,
 
-  const {error:itemError}=await sb
+      price:
+        Number(item.price) || 0
+
+    }));
+
+
+  const {
+    error: itemError
+  } = await sb
     .from('order_items')
     .insert(items);
 
-  if(itemError){
+
+  if (itemError) {
 
     console.error(
       'Eroare produse comandă:',
       itemError
     );
 
-    message.textContent=
+
+    message.textContent =
       'Comanda a fost creată, dar produsele nu au putut fi salvate.';
 
-    message.className='error';
+    message.className =
+      'error';
 
     return;
+
   }
 
-  /*
-    NOTIFICARE EMAIL
 
-    Comanda și produsele sunt deja salvate.
-    Apelăm Edge Function-ul order-notification.
+  /* =========================
+     EMAIL COMANDĂ
+  ========================= */
 
-    Dacă emailul nu poate fi trimis,
-    comanda rămâne salvată și checkout-ul continuă.
-  */
+  try {
 
-  try{
-
-    const notificationResult=
+    const notificationResult =
       await sb.functions.invoke(
         'order-notification',
         {
-          body:{
 
-            order_id:orderId,
+          body: {
 
-            customer_name:name,
+            order_id: orderId,
 
-            customer_phone:phone,
+            customer_name: name,
 
-            customer_address:address,
+            customer_phone: phone,
 
-            total:total.toFixed(2),
+            customer_address: address,
 
-            notes:notes,
+            total:
+              total.toFixed(2),
 
-            items:items.map(item=>({
+            notes: notes,
 
-              product_name:item.product_name,
+            items:
+              items.map(item => ({
 
-              quantity:item.quantity,
+                product_name:
+                  item.product_name,
 
-              price:item.price
+                quantity:
+                  item.quantity,
 
-            }))
+                price:
+                  item.price
+
+              }))
 
           }
+
         }
       );
 
-    if(notificationResult.error){
+
+    if (notificationResult.error) {
 
       console.error(
         'Comanda a fost salvată, dar notificarea email nu a fost trimisă:',
@@ -427,7 +849,7 @@ async function placeOrder(){
 
     }
 
-  }catch(notificationError){
+  } catch (notificationError) {
 
     console.error(
       'Comanda a fost salvată, dar notificarea email a eșuat:',
@@ -436,64 +858,96 @@ async function placeOrder(){
 
   }
 
-  /*
-    CONFIRMAREA COMENZII
 
-    Nu mai deschidem WhatsApp automat.
-    Clientul primește confirmarea și poate alege
-    dacă vrea să trimită și mesaj pe WhatsApp.
-  */
+  /* =========================
+     CONFIRMARE
+  ========================= */
 
-  const orderNumber=
-    orderId.slice(0,8).toUpperCase();
+  const orderNumber =
+    orderId
+      .slice(0, 8)
+      .toUpperCase();
 
-  const whatsappMessage=
-    `Salut! Am plasat o comandă pe KXTuningShop.\n`+
-    `Comanda: ${orderNumber}\n`+
-    `Nume: ${name}\n`+
-    `Telefon: ${phone}\n`+
-    `Adresă: ${address}\n`+
+
+  const whatsappMessage =
+
+    `Salut! Am plasat o comandă pe KXTuningShop.\n` +
+
+    `Comanda: ${orderNumber}\n` +
+
+    `Nume: ${name}\n` +
+
+    `Telefon: ${phone}\n` +
+
+    `Adresă: ${address}\n` +
+
     `Total: ${total.toFixed(2)} lei`;
 
-  const whatsappUrl=
-    `https://wa.me/${WA}?text=${encodeURIComponent(whatsappMessage)}`;
 
-  cart=[];
+  const whatsappUrl =
+
+    `https://wa.me/${WA}?text=` +
+
+    encodeURIComponent(
+      whatsappMessage
+    );
+
+
+  /*
+    Golim coșul după ce comanda
+    și produsele au fost salvate.
+  */
+
+  cart = [];
 
   saveCart();
 
-  const checkoutForm=
-    document.getElementById('checkoutForm');
 
-  if(checkoutForm){
+  const checkoutForm =
+    document.getElementById(
+      'checkoutForm'
+    );
 
-    checkoutForm.innerHTML=`
+
+  if (checkoutForm) {
+
+    checkoutForm.innerHTML = `
 
       <div class="eyebrow">
         COMANDĂ CONFIRMATĂ
       </div>
 
+
       <h3>
         ✅ Comandă plasată cu succes!
       </h3>
+
 
       <p>
         Comanda ta a fost înregistrată.
       </p>
 
+
       <p>
         Număr comandă:
-        <strong>${esc(orderNumber)}</strong>
+        <strong>
+          ${esc(orderNumber)}
+        </strong>
       </p>
+
 
       <p>
         Total:
-        <strong>${esc(total.toFixed(2))} lei</strong>
+        <strong>
+          ${esc(total.toFixed(2))} lei
+        </strong>
       </p>
+
 
       <p>
         Te vom contacta telefonic pentru confirmarea comenzii.
       </p>
+
 
       <a
         class="btn primary"
@@ -506,222 +960,689 @@ async function placeOrder(){
 
     `;
 
+
     checkoutForm.scrollIntoView({
-      behavior:'smooth',
-      block:'center'
+
+      behavior: 'smooth',
+
+      block: 'start'
+
     });
+
   }
+
 }
 
-async function loadPublic(){
 
-  const servicesResult=await sb
-    .from('services')
-    .select('*')
-    .eq('active',true)
-    .order('created_at',{
-      ascending:false
-    });
+/* ========================================================
+   CATEGORII PRODUSE
+======================================================== */
 
-  const projectsResult=await sb
-    .from('projects')
-    .select('*')
-    .order('created_at',{
-      ascending:false
-    });
+function buildProductCategories() {
 
-  const productsResult=await sb
-    .from('products')
-    .select('*')
-    .order('created_at',{
-      ascending:false
-    });
+  const container =
+    document.getElementById(
+      'productCategories'
+    );
 
-  const services=servicesResult.data;
-  const projects=projectsResult.data;
-  const products=productsResult.data;
 
-  const s=services?.length
-    ?services
-    :fallbackServices.map(
-        ([name,description])=>({
-          name,
-          description
-        })
+  if (!container) return;
+
+
+  /*
+    Luăm automat categoriile existente
+    în produsele din Supabase.
+  */
+
+  const categories = [
+
+    ...new Set(
+
+      allProducts
+
+        .map(product =>
+          String(
+            product.category || ''
+          ).trim()
+        )
+
+        .filter(Boolean)
+
+    )
+
+  ].sort(
+    (a, b) =>
+      a.localeCompare(
+        b,
+        'ro'
+      )
+  );
+
+
+  container.innerHTML = `
+
+    <button
+      class="category-button active"
+      type="button"
+      data-category="all"
+      onclick="selectCategory('all', this)"
+    >
+      TOATE
+    </button>
+
+  `;
+
+
+  categories.forEach(category => {
+
+    const button =
+      document.createElement(
+        'button'
       );
 
-  const servicesBox=
-    document.getElementById('services');
 
-  if(servicesBox){
+    button.type =
+      'button';
 
-    servicesBox.innerHTML=s.map(x=>`
 
-      <article class="card service-card">
+    button.className =
+      'category-button';
 
-        <div class="card-icon">
-          ✦
-        </div>
+
+    button.dataset.category =
+      category;
+
+
+    button.textContent =
+      category.toUpperCase();
+
+
+    button.addEventListener(
+      'click',
+      () => {
+
+        selectCategory(
+          category,
+          button
+        );
+
+      }
+    );
+
+
+    container.appendChild(
+      button
+    );
+
+  });
+
+}
+
+
+/* ========================================================
+   SELECTARE CATEGORIE
+======================================================== */
+
+function selectCategory(
+  category,
+  button
+) {
+
+  selectedCategory =
+    category;
+
+
+  visibleProducts =
+    PRODUCTS_PER_PAGE;
+
+
+  document
+    .querySelectorAll(
+      '.category-button'
+    )
+    .forEach(btn => {
+
+      btn.classList.remove(
+        'active'
+      );
+
+    });
+
+
+  if (button) {
+
+    button.classList.add(
+      'active'
+    );
+
+  }
+
+
+  filterProducts();
+
+}
+
+
+/* ========================================================
+   FILTRARE + CĂUTARE
+======================================================== */
+
+function filterProducts() {
+
+  const searchInput =
+    document.getElementById(
+      'productSearch'
+    );
+
+
+  const search =
+    normalizeText(
+      searchInput?.value || ''
+    );
+
+
+  filteredProducts =
+    allProducts.filter(product => {
+
+      const productCategory =
+        String(
+          product.category || ''
+        ).trim();
+
+
+      const categoryMatch =
+
+        selectedCategory === 'all' ||
+
+        productCategory ===
+          selectedCategory;
+
+
+      const searchableText =
+        normalizeText(
+
+          `${product.name || ''} ` +
+
+          `${product.description || ''} ` +
+
+          `${product.category || ''}`
+
+        );
+
+
+      const searchMatch =
+
+        !search ||
+
+        searchableText.includes(
+          search
+        );
+
+
+      return (
+        categoryMatch &&
+        searchMatch
+      );
+
+    });
+
+
+  /*
+    La o căutare nouă nu vrem să
+    rămânem cu sute de produse afișate.
+  */
+
+  if (
+    visibleProducts <
+    PRODUCTS_PER_PAGE
+  ) {
+
+    visibleProducts =
+      PRODUCTS_PER_PAGE;
+
+  }
+
+
+  renderProducts();
+
+}
+
+
+/* ========================================================
+   CARD PRODUS
+======================================================== */
+
+function createProductCard(x) {
+
+  const price =
+    x.price != null
+      ? Number(x.price)
+      : null;
+
+
+  const productForCart = {
+
+    id: x.id,
+
+    name: x.name,
+
+    price: price
+
+  };
+
+
+  return `
+
+    <article class="product-card">
+
+      ${
+        x.image_url
+          ? `
+            <img
+              src="${esc(x.image_url)}"
+              alt="${esc(x.name)}"
+              loading="lazy"
+            >
+          `
+          : ''
+      }
+
+
+      <div>
+
+        <small>
+          ${esc(x.category || 'Produs')}
+        </small>
+
 
         <h3>
           ${esc(x.name)}
         </h3>
 
+
         <p>
-          ${esc(x.description||'')}
+          ${esc(x.description || '')}
         </p>
 
-      </article>
 
-    `).join('');
+        <strong>
+
+          ${
+            price != null &&
+            Number.isFinite(price)
+
+              ? `${price.toFixed(2)} lei`
+
+              : 'Cere preț'
+          }
+
+        </strong>
+
+
+        ${
+          price != null &&
+          Number.isFinite(price)
+
+            ? `
+
+              <button
+                class="btn primary add-cart"
+                type="button"
+                onclick='addToCart(${JSON.stringify(
+                  productForCart
+                )})'
+              >
+                🛒 ADAUGĂ ÎN COȘ
+              </button>
+
+            `
+
+            : ''
+        }
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+/* ========================================================
+   AFIȘARE PRODUSE
+======================================================== */
+
+function renderProducts() {
+
+  const productsBox =
+    document.getElementById(
+      'products'
+    );
+
+
+  const resultsCount =
+    document.getElementById(
+      'productResultsCount'
+    );
+
+
+  const loadMoreWrap =
+    document.getElementById(
+      'loadMoreWrap'
+    );
+
+
+  if (!productsBox) return;
+
+
+  if (resultsCount) {
+
+    const total =
+      filteredProducts.length;
+
+
+    resultsCount.textContent =
+
+      total === 1
+
+        ? '1 produs'
+
+        : `${total} produse`;
+
   }
 
-  const serviceSelect=
-    document.getElementById('serviceSelect');
 
-  if(serviceSelect){
+  if (!filteredProducts.length) {
 
-    serviceSelect.innerHTML=
-      '<option value="">Alege serviciul</option>'+
-      s.map(x=>`
+    productsBox.innerHTML = `
 
-        <option>
+      <div class="empty">
+        Nu am găsit produse pentru această căutare.
+      </div>
+
+    `;
+
+
+    if (loadMoreWrap) {
+
+      loadMoreWrap.classList.add(
+        'hidden'
+      );
+
+    }
+
+
+    return;
+
+  }
+
+
+  const productsToShow =
+    filteredProducts.slice(
+      0,
+      visibleProducts
+    );
+
+
+  productsBox.innerHTML =
+
+    productsToShow
+      .map(createProductCard)
+      .join('');
+
+
+  if (loadMoreWrap) {
+
+    if (
+      visibleProducts <
+      filteredProducts.length
+    ) {
+
+      loadMoreWrap.classList.remove(
+        'hidden'
+      );
+
+    } else {
+
+      loadMoreWrap.classList.add(
+        'hidden'
+      );
+
+    }
+
+  }
+
+}
+
+
+/* ========================================================
+   ÎNCARCĂ MAI MULTE
+======================================================== */
+
+function loadMoreProducts() {
+
+  visibleProducts +=
+    PRODUCTS_PER_PAGE;
+
+
+  renderProducts();
+
+}
+
+
+/* ========================================================
+   ÎNCĂRCARE SITE
+======================================================== */
+
+async function loadPublic() {
+
+  /* =========================
+     SERVICII
+  ========================= */
+
+  const servicesResult =
+    await sb
+      .from('services')
+      .select('*')
+      .eq('active', true)
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+
+
+  /* =========================
+     LUCRĂRI
+  ========================= */
+
+  const projectsResult =
+    await sb
+      .from('projects')
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+
+
+  /* =========================
+     PRODUSE
+  ========================= */
+
+  const productsResult =
+    await sb
+      .from('products')
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
+
+
+  const services =
+    servicesResult.data;
+
+
+  const projects =
+    projectsResult.data;
+
+
+  const products =
+    productsResult.data;
+
+
+  /* ======================================================
+     SERVICII
+  ====================================================== */
+
+  const s =
+    services?.length
+
+      ? services
+
+      : fallbackServices.map(
+
+          ([name, description]) => ({
+
+            name,
+
+            description
+
+          })
+
+        );
+
+
+  const servicesBox =
+    document.getElementById(
+      'services'
+    );
+
+
+  if (servicesBox) {
+
+    servicesBox.innerHTML =
+      s.map(x => `
+
+        <article class="card service-card">
+
+          <div class="card-icon">
+            ✦
+          </div>
+
+
+          <h3>
+            ${esc(x.name)}
+          </h3>
+
+
+          <p>
+            ${esc(x.description || '')}
+          </p>
+
+        </article>
+
+      `).join('');
+
+  }
+
+
+  /* ======================================================
+     SELECT SERVICII
+  ====================================================== */
+
+  const serviceSelect =
+    document.getElementById(
+      'serviceSelect'
+    );
+
+
+  if (serviceSelect) {
+
+    serviceSelect.innerHTML =
+
+      '<option value="">Alege serviciul</option>' +
+
+      s.map(x => `
+
+        <option value="${esc(x.name)}">
           ${esc(x.name)}
         </option>
 
       `).join('');
+
   }
 
-  const projectsBox=
-    document.getElementById('projects');
 
-  if(projectsBox){
+  /* ======================================================
+     LUCRĂRI
+  ====================================================== */
 
-    projectsBox.innerHTML=
-      projects?.length
-      ?projects.map(x=>`
+  const projectsBox =
+    document.getElementById(
+      'projects'
+    );
 
-        <article class="project-card">
 
-          ${
-            x.image_url
-            ?`
-              <img
-                src="${esc(x.image_url)}"
-                alt="${esc(x.title)}"
-              >
-            `
-            :''
-          }
+  if (projectsBox) {
 
-          <div>
+    if (projects?.length) {
 
-            <small>
-              ${esc(x.car_make||'')}
-              ${esc(x.car_model||'')}
-            </small>
+      projectsBox.innerHTML =
 
-            <h3>
-              ${esc(x.title)}
-            </h3>
+        projects.map(x => `
 
-            <p>
-              ${esc(
-                x.description||
-                x.service||
-                ''
-              )}
-            </p>
-
-          </div>
-
-        </article>
-
-      `).join('')
-      :
-      `
-        <div class="empty">
-          Lucrările vor apărea aici în curând.
-        </div>
-      `;
-  }
-
-  const productsBox=
-    document.getElementById('products');
-
-  if(productsBox){
-
-    if(productsResult.error){
-
-      console.error(
-        'Eroare produse:',
-        productsResult.error
-      );
-
-      productsBox.innerHTML=`
-
-        <div class="empty">
-          Nu am putut încărca produsele.
-        </div>
-
-      `;
-
-    }else if(products?.length){
-
-      productsBox.innerHTML=
-        products.map(x=>`
-
-          <article class="product-card">
+          <article class="project-card">
 
             ${
               x.image_url
-              ?`
-                <img
-                  src="${esc(x.image_url)}"
-                  alt="${esc(x.name)}"
-                >
-              `
-              :''
+
+                ? `
+
+                  <img
+                    src="${esc(x.image_url)}"
+                    alt="${esc(x.title)}"
+                    loading="lazy"
+                  >
+
+                `
+
+                : ''
             }
+
 
             <div>
 
               <small>
-                ${esc(x.category||'')}
+
+                ${esc(x.car_make || '')}
+
+                ${esc(x.car_model || '')}
+
               </small>
 
+
               <h3>
-                ${esc(x.name)}
+                ${esc(x.title)}
               </h3>
 
+
               <p>
-                ${esc(x.description||'')}
+
+                ${esc(
+                  x.description ||
+                  x.service ||
+                  ''
+                )}
+
               </p>
-
-              <strong>
-                ${
-                  x.price!=null
-                  ?esc(x.price)+' lei'
-                  :'Cere preț'
-                }
-              </strong>
-
-              ${
-                x.price!=null
-                ?`
-                  <button
-                    class="btn primary add-cart"
-                    onclick='addToCart(${JSON.stringify({
-                      id:x.id,
-                      name:x.name,
-                      price:x.price
-                    })})'
-                  >
-                    🛒 ADAUGĂ ÎN COȘ
-                  </button>
-                `
-                :''
-              }
 
             </div>
 
@@ -729,9 +1650,78 @@ async function loadPublic(){
 
         `).join('');
 
-    }else{
+    } else {
 
-      productsBox.innerHTML=`
+      projectsBox.innerHTML = `
+
+        <div class="empty">
+          Lucrările vor apărea aici în curând.
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  /* ======================================================
+     PRODUSE
+  ====================================================== */
+
+  const productsBox =
+    document.getElementById(
+      'products'
+    );
+
+
+  if (productsBox) {
+
+    if (productsResult.error) {
+
+      console.error(
+        'Eroare produse:',
+        productsResult.error
+      );
+
+
+      productsBox.innerHTML = `
+
+        <div class="empty">
+          Nu am putut încărca produsele.
+        </div>
+
+      `;
+
+
+    } else if (products?.length) {
+
+      allProducts =
+        products;
+
+
+      filteredProducts =
+        [...allProducts];
+
+
+      visibleProducts =
+        PRODUCTS_PER_PAGE;
+
+
+      buildProductCategories();
+
+
+      renderProducts();
+
+
+    } else {
+
+      allProducts = [];
+
+      filteredProducts = [];
+
+
+      productsBox.innerHTML = `
 
         <div class="empty">
           Nu există produse momentan.
@@ -739,105 +1729,263 @@ async function loadPublic(){
 
       `;
 
+
+      const loadMoreWrap =
+        document.getElementById(
+          'loadMoreWrap'
+        );
+
+
+      if (loadMoreWrap) {
+
+        loadMoreWrap.classList.add(
+          'hidden'
+        );
+
+      }
+
     }
+
   }
 
+
   updateCartUI();
-}
-
-function whatsapp(message){
-
-  return `https://wa.me/${WA}?text=${encodeURIComponent(message)}`;
 
 }
+
+
+/* ========================================================
+   WHATSAPP
+======================================================== */
+
+function whatsapp(message) {
+
+  return (
+    `https://wa.me/${WA}?text=` +
+    encodeURIComponent(message)
+  );
+
+}
+
+
+/* ========================================================
+   ESC - ÎNCHIDE MENIU / COȘ
+======================================================== */
+
+document.addEventListener(
+  'keydown',
+  event => {
+
+    if (event.key !== 'Escape') {
+      return;
+    }
+
+
+    const menu =
+      document.getElementById(
+        'mobileMenu'
+      );
+
+
+    if (menu) {
+
+      menu.classList.add(
+        'hidden'
+      );
+
+    }
+
+
+    const cartOverlay =
+      document.getElementById(
+        'cartOverlay'
+      );
+
+
+    if (cartOverlay) {
+
+      cartOverlay.classList.add(
+        'hidden'
+      );
+
+    }
+
+
+    document.body.classList.remove(
+      'no-scroll'
+    );
+
+  }
+);
+
+
+/* ========================================================
+   DOM READY
+======================================================== */
 
 document.addEventListener(
   'DOMContentLoaded',
-  async()=>{
+  async () => {
 
-    if(document.getElementById('services')){
+    /* =========================
+       SITE PUBLIC
+    ========================= */
+
+    if (
+      document.getElementById(
+        'services'
+      )
+    ) {
 
       await loadPublic();
 
     }
 
+
     updateCartUI();
 
-    const f=
-      document.getElementById('quoteForm');
 
-    if(f){
+    /* =========================
+       FORMULAR OFERTĂ
+    ========================= */
+
+    const f =
+      document.getElementById(
+        'quoteForm'
+      );
+
+
+    if (f) {
 
       f.addEventListener(
         'submit',
-        async e=>{
+        async event => {
 
-          e.preventDefault();
+          event.preventDefault();
 
-          const fd=new FormData(f);
 
-          const q={
+          const fd =
+            new FormData(f);
 
-            name:fd.get('nume'),
 
-            phone:fd.get('telefon'),
+          const q = {
 
-            car_make:fd.get('marca'),
+            name:
+              fd.get('nume'),
 
-            car_model:fd.get('model'),
+            phone:
+              fd.get('telefon'),
+
+            car_make:
+              fd.get('marca'),
+
+            car_model:
+              fd.get('model'),
 
             car_year:
               fd.get('an')
-              ?Number(fd.get('an'))
-              :null,
+                ? Number(
+                    fd.get('an')
+                  )
+                : null,
 
-            service:fd.get('serviciu'),
+            service:
+              fd.get('serviciu'),
 
             message:
-              `Motorizare: ${fd.get('motor')||'-'}\n`+
-              `${fd.get('detalii')||''}`
+
+              `Motorizare: ${
+                fd.get('motor') || '-'
+              }\n` +
+
+              `${fd.get('detalii') || ''}`
 
           };
 
-          const {error}=await sb
+
+          const {
+            error
+          } = await sb
             .from('quote_requests')
             .insert(q);
 
-          const msg=
-            document.getElementById('success');
 
-          if(error){
+          const msg =
+            document.getElementById(
+              'success'
+            );
+
+
+          const formWhatsApp =
+            document.getElementById(
+              'formWhatsApp'
+            );
+
+
+          if (error) {
 
             console.error(
               'Eroare cerere ofertă:',
               error
             );
 
-            msg.textContent=
-              'Nu am putut trimite cererea. Încearcă WhatsApp.';
 
-            document.getElementById(
-              'formWhatsApp'
-            ).href=
-              whatsapp(
-                `Salut! Vreau o ofertă pentru `+
-                `${q.car_make} ${q.car_model}. `+
-                `${q.service}. ${q.message}`
-              );
+            if (msg) {
+
+              msg.textContent =
+                'Nu am putut trimite cererea. Încearcă WhatsApp.';
+
+              msg.className =
+                'error';
+
+            }
+
+
+            if (formWhatsApp) {
+
+              formWhatsApp.href =
+                whatsapp(
+
+                  `Salut! Vreau o ofertă pentru ` +
+
+                  `${q.car_make} ${q.car_model}. ` +
+
+                  `${q.service}. ${q.message}`
+
+                );
+
+            }
+
 
             return;
+
           }
 
-          msg.textContent=
-            'Cererea a fost trimisă! Te vom contacta cât mai repede.';
 
-          document.getElementById(
-            'formWhatsApp'
-          ).href=
-            whatsapp(
-              `Salut! Am trimis o cerere pe site pentru `+
-              `${q.car_make} ${q.car_model}.`
-            );
+          if (msg) {
+
+            msg.textContent =
+              'Cererea a fost trimisă! Te vom contacta cât mai repede.';
+
+            msg.className =
+              'success';
+
+          }
+
+
+          if (formWhatsApp) {
+
+            formWhatsApp.href =
+              whatsapp(
+
+                `Salut! Am trimis o cerere pe site pentru ` +
+
+                `${q.car_make} ${q.car_model}.`
+
+              );
+
+          }
+
 
           f.reset();
 
