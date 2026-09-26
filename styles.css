@@ -3299,3 +3299,90 @@ th {
   }
 
 }
+/* =========================================================
+   FIX FEREASTRA PRODUS - IMAGINE MARE
+========================================================= */
+
+.product-detail-image-wrap {
+  width: 100%;
+  min-height: 520px;
+  padding: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #0b1118;
+  overflow: hidden;
+}
+
+.product-detail-image {
+  width: 100%;
+  height: 100%;
+  max-height: 560px;
+
+  object-fit: contain;
+  object-position: center;
+
+  display: block;
+  border-radius: 12px;
+}
+
+
+/* Fereastra produsului */
+
+#productModalBox {
+  width: min(1200px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#productModalContent {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  align-items: stretch;
+}
+
+
+/* Partea cu informațiile */
+
+.product-detail-info {
+  padding: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+/* =========================================================
+   TELEFON
+========================================================= */
+
+@media (max-width: 768px) {
+
+  #productModalBox {
+    width: 94vw;
+    max-height: 92vh;
+  }
+
+  #productModalContent {
+    display: block;
+  }
+
+  .product-detail-image-wrap {
+    min-height: 0;
+    height: auto;
+    padding: 15px;
+  }
+
+  .product-detail-image {
+    width: 100%;
+    height: auto;
+    max-height: 420px;
+    object-fit: contain;
+  }
+
+  .product-detail-info {
+    padding: 22px 18px 26px;
+  }
+}
