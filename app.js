@@ -342,11 +342,6 @@ function updateCartUI() {
     </div>
   `;
 
-  /*
-    BUTONUL CARE LIPSEA.
-    Acesta deschide formularul de checkout.
-  */
-
   const checkoutButtonHtml = `
     <button
       class="btn primary cart-checkout"
@@ -555,6 +550,7 @@ function openCheckout() {
 
       <div>
         <span>Transport</span>
+
         <strong>
           ${
             shipping === 0
@@ -579,6 +575,18 @@ function openCheckout() {
         required
         autocomplete="name"
         placeholder="Numele tău"
+      >
+    </label>
+
+    <label>
+      Email*
+
+      <input
+        id="checkoutEmail"
+        type="email"
+        required
+        autocomplete="email"
+        placeholder="exemplu@email.com"
       >
     </label>
 
@@ -797,6 +805,10 @@ async function placeOrder() {
     document.getElementById('checkoutName')
       ?.value.trim();
 
+  const email =
+    document.getElementById('checkoutEmail')
+      ?.value.trim();
+
   const phone =
     document.getElementById('checkoutPhone')
       ?.value.trim();
@@ -836,6 +848,7 @@ async function placeOrder() {
 
   if (
     !name ||
+    !email ||
     !phone ||
     !county ||
     !city ||
@@ -843,6 +856,18 @@ async function placeOrder() {
   ) {
     message.textContent =
       'Completează toate câmpurile obligatorii.';
+
+    message.className = 'error';
+
+    return;
+  }
+
+  const emailIsValid =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!emailIsValid) {
+    message.textContent =
+      'Introdu o adresă de email validă.';
 
     message.className = 'error';
 
@@ -927,6 +952,9 @@ async function placeOrder() {
 
       customer_name:
         name,
+
+      customer_email:
+        email,
 
       customer_phone:
         phone,
@@ -1024,6 +1052,9 @@ async function placeOrder() {
             customer_name:
               name,
 
+            customer_email:
+              email,
+
             customer_phone:
               phone,
 
@@ -1091,6 +1122,7 @@ async function placeOrder() {
     `Salut! Am plasat o comandă pe KXTuningShop.\n\n` +
     `Comanda: ${orderNumber}\n` +
     `Nume: ${name}\n` +
+    `Email: ${email}\n` +
     `Telefon: ${phone}\n` +
     `Adresă: ${address}\n\n` +
     `Produse: ${subtotal.toFixed(2)} lei\n` +
@@ -1165,6 +1197,16 @@ async function placeOrder() {
 
         <div>
           <span>
+            Email
+          </span>
+
+          <strong>
+            ${esc(email)}
+          </strong>
+        </div>
+
+        <div>
+          <span>
             Produse
           </span>
 
@@ -1208,8 +1250,8 @@ async function placeOrder() {
       </div>
 
       <p>
-        Te vom contacta telefonic pentru
-        confirmarea comenzii.
+        Comanda a fost înregistrată.
+        Vei primi confirmarea și pe email.
       </p>
 
       <a
@@ -1338,9 +1380,7 @@ function selectCategory(
   }
 
   filterProducts();
-}
-
-
+} 
 /* ========================================================
    FILTRARE PRODUSE
 ======================================================== */
@@ -1779,7 +1819,9 @@ async function loadPublic() {
   }
 
   updateCartUI();
-} 
+}
+
+
 /* ========================================================
    WHATSAPP
 ======================================================== */
