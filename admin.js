@@ -388,6 +388,47 @@ async function updateOrderStatus(id, status) {
 
 window.updateOrderStatus = updateOrderStatus;
 
+async function deleteOrder(id) {
+  const confirmDelete = confirm(
+    'Sigur vrei să ștergi această comandă?'
+  );
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  const itemsResult = await sb
+    .from('order_items')
+    .delete()
+    .eq('order_id', id);
+
+  if (itemsResult.error) {
+    alert(
+      'Nu s-au putut șterge produsele comenzii: ' +
+      itemsResult.error.message
+    );
+    return;
+  }
+
+  const orderResult = await sb
+    .from('orders')
+    .delete()
+    .eq('id', id);
+
+  if (orderResult.error) {
+    alert(
+      'Nu s-a putut șterge comanda: ' +
+      orderResult.error.message
+    );
+    return;
+  }
+
+  await renderOrders();
+  await renderDash();
+}
+
+window.deleteOrder = deleteOrder;
+
 async function renderOrders() {
   const result = await sb
     .from('orders')
@@ -514,6 +555,14 @@ async function renderOrders() {
               : ''
           }
         </td>
+
+        <td>
+          <button
+            class="danger"
+            onclick="deleteOrder('${aesc(order.id)}')">
+            🗑️ Șterge
+          </button>
+        </td>
       </tr>
     `;
   }
@@ -521,7 +570,7 @@ async function renderOrders() {
   if (!rows) {
     rows =
       '<tr>' +
-      '<td colspan="6">Nu există comenzi.</td>' +
+      '<td colspan="7">Nu există comenzi.</td>' +
       '</tr>';
   }
 
@@ -543,6 +592,7 @@ async function renderOrders() {
             <th>Total</th>
             <th>Status</th>
             <th>Data</th>
+            <th>Acțiuni</th>
           </tr>
         </thead>
 
