@@ -10,6 +10,14 @@ const WA = '40753911677';
 
 
 /* ========================================================
+   TRANSPORT
+======================================================== */
+
+const SHIPPING_COST = 25;
+const FREE_SHIPPING_FROM = 500;
+
+
+/* ========================================================
    SERVICII FALLBACK
 ======================================================== */
 
@@ -157,10 +165,10 @@ function cartCount() {
 
 
 /* ========================================================
-   TOTAL COȘ
+   SUBTOTAL PRODUSE
 ======================================================== */
 
-function cartTotal() {
+function productsTotal() {
   return cart.reduce(
     (sum, item) =>
       sum +
@@ -168,6 +176,34 @@ function cartTotal() {
       Number(item.quantity || 0),
     0
   );
+}
+
+
+/* ========================================================
+   TRANSPORT
+======================================================== */
+
+function shippingCost() {
+  const subtotal = productsTotal();
+
+  if (subtotal <= 0) {
+    return 0;
+  }
+
+  if (subtotal >= FREE_SHIPPING_FROM) {
+    return 0;
+  }
+
+  return SHIPPING_COST;
+}
+
+
+/* ========================================================
+   TOTAL FINAL
+======================================================== */
+
+function cartTotal() {
+  return productsTotal() + shippingCost();
 }
 
 
@@ -210,51 +246,111 @@ function updateCartUI() {
   }
 
 
-  box.innerHTML = cart.map(item => `
-    <div class="cart-item">
+  const subtotal = productsTotal();
+  const shipping = shippingCost();
 
-      <div>
+  const amountUntilFreeShipping =
+    Math.max(
+      0,
+      FREE_SHIPPING_FROM - subtotal
+    );
+
+
+  const itemsHtml =
+    cart.map(item => `
+      <div class="cart-item">
+
+        <div>
+          <strong>
+            ${esc(item.name)}
+          </strong>
+
+          <small>
+            ${Number(item.price).toFixed(2)} lei / buc.
+          </small>
+        </div>
+
+        <div class="cart-controls">
+
+          <button
+            type="button"
+            onclick="changeQuantity('${item.id}', -1)"
+          >
+            −
+          </button>
+
+          <span>
+            ${item.quantity}
+          </span>
+
+          <button
+            type="button"
+            onclick="changeQuantity('${item.id}', 1)"
+          >
+            +
+          </button>
+
+          <button
+            type="button"
+            class="danger"
+            onclick="removeFromCart('${item.id}')"
+          >
+            Șterge
+          </button>
+
+        </div>
+
+      </div>
+    `).join('');
+
+
+  const shippingHtml = `
+    <div class="cart-shipping-summary">
+
+      <div class="cart-summary-row">
+        <span>Produse</span>
+
         <strong>
-          ${esc(item.name)}
+          ${subtotal.toFixed(2)} lei
         </strong>
-
-        <small>
-          ${Number(item.price).toFixed(2)} lei / buc.
-        </small>
       </div>
 
-      <div class="cart-controls">
+      <div class="cart-summary-row">
+        <span>Transport</span>
 
-        <button
-          type="button"
-          onclick="changeQuantity('${item.id}', -1)"
-        >
-          −
-        </button>
-
-        <span>
-          ${item.quantity}
-        </span>
-
-        <button
-          type="button"
-          onclick="changeQuantity('${item.id}', 1)"
-        >
-          +
-        </button>
-
-        <button
-          type="button"
-          class="danger"
-          onclick="removeFromCart('${item.id}')"
-        >
-          Șterge
-        </button>
-
+        <strong>
+          ${
+            shipping === 0
+              ? 'GRATUIT'
+              : `${shipping.toFixed(2)} lei`
+          }
+        </strong>
       </div>
+
+      ${
+        shipping > 0
+          ? `
+            <div class="free-shipping-message">
+              Mai adaugă
+              <strong>
+                ${amountUntilFreeShipping.toFixed(2)} lei
+              </strong>
+              pentru transport gratuit.
+            </div>
+          `
+          : `
+            <div class="free-shipping-message">
+              ✓ Ai transport gratuit!
+            </div>
+          `
+      }
 
     </div>
-  `).join('');
+  `;
+
+
+  box.innerHTML =
+    itemsHtml + shippingHtml;
 }
 
 
@@ -423,6 +519,11 @@ function openCheckout() {
     });
 
 
+  const subtotal = productsTotal();
+  const shipping = shippingCost();
+  const total = cartTotal();
+
+
   const form =
     document.createElement('div');
 
@@ -439,6 +540,31 @@ function openCheckout() {
     <h3>
       Finalizează comanda
     </h3>
+
+    <div class="checkout-order-summary">
+
+      <div>
+        <span>Produse</span>
+        <strong>${subtotal.toFixed(2)} lei</strong>
+      </div>
+
+      <div>
+        <span>Transport</span>
+        <strong>
+          ${
+            shipping === 0
+              ? 'GRATUIT'
+              : `${shipping.toFixed(2)} lei`
+          }
+        </strong>
+      </div>
+
+      <div class="checkout-final-total">
+        <span>Total</span>
+        <strong>${total.toFixed(2)} lei</strong>
+      </div>
+
+    </div>
 
     <label>
       Nume*
@@ -661,52 +787,36 @@ function updatePaymentMethod() {
 /* ========================================================
    PLASEAZĂ COMANDA
 ======================================================== */
-
 async function placeOrder() {
   if (!cart.length) return;
 
-
   const name =
-    document
-      .getElementById('checkoutName')
-      ?.value
-      .trim();
+    document.getElementById('checkoutName')
+      ?.value.trim();
 
   const phone =
-    document
-      .getElementById('checkoutPhone')
-      ?.value
-      .trim();
+    document.getElementById('checkoutPhone')
+      ?.value.trim();
 
   const county =
-    document
-      .getElementById('checkoutCounty')
-      ?.value
-      .trim();
+    document.getElementById('checkoutCounty')
+      ?.value.trim();
 
   const city =
-    document
-      .getElementById('checkoutCity')
-      ?.value
-      .trim();
+    document.getElementById('checkoutCity')
+      ?.value.trim();
 
   const street =
-    document
-      .getElementById('checkoutStreet')
-      ?.value
-      .trim();
+    document.getElementById('checkoutStreet')
+      ?.value.trim();
 
   const postalCode =
-    document
-      .getElementById('checkoutPostalCode')
-      ?.value
-      .trim() || '';
+    document.getElementById('checkoutPostalCode')
+      ?.value.trim() || '';
 
   const notes =
-    document
-      .getElementById('checkoutNotes')
-      ?.value
-      .trim() || '';
+    document.getElementById('checkoutNotes')
+      ?.value.trim() || '';
 
   const paymentMethod =
     document.querySelector(
@@ -714,17 +824,17 @@ async function placeOrder() {
     )?.value || 'cash';
 
   const message =
-    document.getElementById(
-      'checkoutMessage'
-    );
+    document.getElementById('checkoutMessage');
 
   const button =
-    document.getElementById(
-      'placeOrderButton'
-    );
+    document.getElementById('placeOrderButton');
 
   if (!message) return;
 
+
+  /* =========================
+     VALIDARE
+  ========================= */
 
   if (
     !name ||
@@ -752,12 +862,15 @@ async function placeOrder() {
   }
 
 
+  /* =========================
+     ADRESĂ
+  ========================= */
+
   const addressParts = [
     street,
     city,
     county
   ];
-
 
   if (postalCode) {
     addressParts.push(
@@ -765,9 +878,22 @@ async function placeOrder() {
     );
   }
 
-
   const address =
     addressParts.join(', ');
+
+
+  /* =========================
+     TOTALURI
+  ========================= */
+
+  const subtotal =
+    productsTotal();
+
+  const shipping =
+    shippingCost();
+
+  const total =
+    cartTotal();
 
 
   const paymentText =
@@ -776,14 +902,29 @@ async function placeOrder() {
       : 'Card';
 
 
-  const finalNotes =
-    `Metodă de plată: ${paymentText}` +
-    (
-      notes
-        ? `\nObservații: ${notes}`
-        : ''
-    );
+  /* =========================
+     OBSERVAȚII COMANDĂ
+  ========================= */
 
+  let finalNotes =
+    `Metodă de plată: ${paymentText}\n` +
+    `Produse: ${subtotal.toFixed(2)} lei\n` +
+    `Transport: ${
+      shipping === 0
+        ? 'GRATUIT'
+        : shipping.toFixed(2) + ' lei'
+    }\n` +
+    `Total: ${total.toFixed(2)} lei`;
+
+  if (notes) {
+    finalNotes +=
+      `\nObservații: ${notes}`;
+  }
+
+
+  /* =========================
+     LOADING
+  ========================= */
 
   if (button) {
     button.disabled = true;
@@ -792,7 +933,6 @@ async function placeOrder() {
       'SE TRIMITE COMANDA...';
   }
 
-
   message.textContent =
     'Se trimite comanda...';
 
@@ -800,15 +940,13 @@ async function placeOrder() {
     'success';
 
 
-  const total =
-    cartTotal();
-
-
   const orderId =
     crypto.randomUUID();
 
 
-  /* SALVARE COMANDĂ */
+  /* ========================================================
+     SALVARE COMANDĂ
+  ======================================================== */
 
   const {
     error: orderError
@@ -816,12 +954,29 @@ async function placeOrder() {
     .from('orders')
     .insert({
       id: orderId,
-      customer_name: name,
-      customer_phone: phone,
-      customer_address: address,
-      total: total,
-      status: 'new',
-      notes: finalNotes
+
+      customer_name:
+        name,
+
+      customer_phone:
+        phone,
+
+      customer_address:
+        address,
+
+      /*
+        IMPORTANT:
+        aici salvăm TOTALUL FINAL,
+        adică produse + transport.
+      */
+      total:
+        total,
+
+      status:
+        'new',
+
+      notes:
+        finalNotes
     });
 
 
@@ -848,15 +1003,26 @@ async function placeOrder() {
   }
 
 
-  /* PRODUSE COMANDĂ */
+  /* ========================================================
+     PRODUSELE COMENZII
+  ======================================================== */
 
   const items =
     cart.map(item => ({
-      order_id: orderId,
-      product_id: item.id,
-      product_name: item.name,
-      quantity: item.quantity,
-      price: Number(item.price) || 0
+      order_id:
+        orderId,
+
+      product_id:
+        item.id,
+
+      product_name:
+        item.name,
+
+      quantity:
+        item.quantity,
+
+      price:
+        Number(item.price) || 0
     }));
 
 
@@ -890,7 +1056,9 @@ async function placeOrder() {
   }
 
 
-  /* EMAIL COMANDĂ */
+  /* ========================================================
+     EMAIL COMANDĂ
+  ======================================================== */
 
   try {
     const notificationResult =
@@ -898,13 +1066,43 @@ async function placeOrder() {
         'order-notification',
         {
           body: {
-            order_id: orderId,
-            customer_name: name,
-            customer_phone: phone,
-            customer_address: address,
-            total: total.toFixed(2),
-            notes: finalNotes,
-            payment_method: paymentText,
+            order_id:
+              orderId,
+
+            customer_name:
+              name,
+
+            customer_phone:
+              phone,
+
+            customer_address:
+              address,
+
+            /*
+              Totalul final
+            */
+            total:
+              total.toFixed(2),
+
+            /*
+              Trimitem și valorile separat.
+              Vom modifica Edge Function-ul
+              după ce testăm coșul.
+            */
+            subtotal:
+              subtotal.toFixed(2),
+
+            shipping:
+              shipping.toFixed(2),
+
+            free_shipping:
+              shipping === 0,
+
+            notes:
+              finalNotes,
+
+            payment_method:
+              paymentText,
 
             items:
               items.map(item => ({
@@ -937,11 +1135,9 @@ async function placeOrder() {
   }
 
 
-  /* ======================================================
-     CONFIRMARE COMANDĂ
-     IMPORTANT:
-     NU apelăm saveCart() înainte de afișarea confirmării.
-  ====================================================== */
+  /* ========================================================
+     NUMĂR COMANDĂ
+  ======================================================== */
 
   const orderNumber =
     orderId
@@ -949,14 +1145,34 @@ async function placeOrder() {
       .toUpperCase();
 
 
+  /* ========================================================
+     WHATSAPP
+  ======================================================== */
+
+  const shippingText =
+    shipping === 0
+      ? 'GRATUIT'
+      : `${shipping.toFixed(2)} lei`;
+
+
   const whatsappMessage =
-    `Salut! Am plasat o comandă pe KXTuningShop.\n` +
+    `Salut! Am plasat o comandă pe KXTuningShop.\n\n` +
+
     `Comanda: ${orderNumber}\n` +
+
     `Nume: ${name}\n` +
+
     `Telefon: ${phone}\n` +
-    `Adresă: ${address}\n` +
-    `Plată: ${paymentText}\n` +
-    `Total: ${total.toFixed(2)} lei`;
+
+    `Adresă: ${address}\n\n` +
+
+    `Produse: ${subtotal.toFixed(2)} lei\n` +
+
+    `Transport: ${shippingText}\n` +
+
+    `TOTAL: ${total.toFixed(2)} lei\n\n` +
+
+    `Plată: ${paymentText}`;
 
 
   const whatsappUrl =
@@ -966,10 +1182,9 @@ async function placeOrder() {
     );
 
 
-  /*
-    IMPORTANT:
-    Luăm formularul ÎNAINTE să golim coșul.
-  */
+  /* ========================================================
+     PĂSTRĂM FORMULARUL PENTRU CONFIRMARE
+  ======================================================== */
 
   const checkoutForm =
     document.getElementById(
@@ -977,11 +1192,10 @@ async function placeOrder() {
     );
 
 
-  /*
-    Golim coșul, DAR NU folosim saveCart(),
-    pentru că saveCart() ar apela updateCartUI()
-    și ar șterge checkoutForm.
-  */
+  /* ========================================================
+     GOLIM COȘUL
+     FĂRĂ saveCart()
+  ======================================================== */
 
   cart = [];
 
@@ -992,8 +1206,9 @@ async function placeOrder() {
 
 
   /*
-    Actualizăm manual doar numărul de produse
-    și totalul din coș.
+    Actualizăm doar badge-ul.
+    NU chemăm updateCartUI(),
+    pentru că ar șterge confirmarea.
   */
 
   const cartCountElement =
@@ -1002,7 +1217,8 @@ async function placeOrder() {
     );
 
   if (cartCountElement) {
-    cartCountElement.textContent = '0';
+    cartCountElement.textContent =
+      '0';
   }
 
 
@@ -1017,10 +1233,9 @@ async function placeOrder() {
   }
 
 
-  /*
-    Acum formularul încă există,
-    deci afișăm confirmarea.
-  */
+  /* ========================================================
+     CONFIRMARE PE ECRAN
+  ======================================================== */
 
   if (checkoutForm) {
     checkoutForm.innerHTML = `
@@ -1037,30 +1252,73 @@ async function placeOrder() {
         Comanda ta a fost înregistrată.
       </p>
 
-      <p>
-        Număr comandă:
-        <strong>
-          ${esc(orderNumber)}
-        </strong>
-      </p>
+
+      <div class="checkout-order-summary">
+
+        <div>
+          <span>
+            Număr comandă
+          </span>
+
+          <strong>
+            ${esc(orderNumber)}
+          </strong>
+        </div>
+
+
+        <div>
+          <span>
+            Produse
+          </span>
+
+          <strong>
+            ${esc(subtotal.toFixed(2))} lei
+          </strong>
+        </div>
+
+
+        <div>
+          <span>
+            Transport
+          </span>
+
+          <strong>
+            ${esc(shippingText)}
+          </strong>
+        </div>
+
+
+        <div>
+          <span>
+            Metodă de plată
+          </span>
+
+          <strong>
+            ${esc(paymentText)}
+          </strong>
+        </div>
+
+
+        <div class="checkout-final-total">
+
+          <span>
+            TOTAL
+          </span>
+
+          <strong>
+            ${esc(total.toFixed(2))} lei
+          </strong>
+
+        </div>
+
+      </div>
+
 
       <p>
-        Metodă de plată:
-        <strong>
-          ${esc(paymentText)}
-        </strong>
+        Te vom contacta telefonic pentru
+        confirmarea comenzii.
       </p>
 
-      <p>
-        Total:
-        <strong>
-          ${esc(total.toFixed(2))} lei
-        </strong>
-      </p>
-
-      <p>
-        Te vom contacta telefonic pentru confirmarea comenzii.
-      </p>
 
       <a
         class="btn primary"
@@ -1132,7 +1390,8 @@ function buildProductCategories() {
         'button'
       );
 
-    button.type = 'button';
+    button.type =
+      'button';
 
     button.className =
       'category-button';
@@ -1200,7 +1459,7 @@ function selectCategory(
 
 
 /* ========================================================
-   FILTRARE + CĂUTARE
+   FILTRARE PRODUSE
 ======================================================== */
 
 function filterProducts() {
@@ -1253,13 +1512,8 @@ function filterProducts() {
     });
 
 
-  if (
-    visibleProducts <
-    PRODUCTS_PER_PAGE
-  ) {
-    visibleProducts =
-      PRODUCTS_PER_PAGE;
-  }
+  visibleProducts =
+    PRODUCTS_PER_PAGE;
 
 
   renderProducts();
@@ -1278,9 +1532,14 @@ function createProductCard(x) {
 
 
   const productForCart = {
-    id: x.id,
-    name: x.name,
-    price: price
+    id:
+      x.id,
+
+    name:
+      x.name,
+
+    price:
+      price
   };
 
 
@@ -1498,7 +1757,9 @@ async function loadPublic() {
     productsResult.data;
 
 
-  /* SERVICII */
+  /* =========================
+     SERVICII
+  ========================= */
 
   const s =
     services?.length
@@ -1539,7 +1800,9 @@ async function loadPublic() {
   }
 
 
-  /* SELECT SERVICII */
+  /* =========================
+     SELECT SERVICII
+  ========================= */
 
   const serviceSelect =
     document.getElementById(
@@ -1558,7 +1821,9 @@ async function loadPublic() {
   }
 
 
-  /* LUCRĂRI */
+  /* =========================
+     LUCRĂRI
+  ========================= */
 
   const projectsBox =
     document.getElementById(
@@ -1617,7 +1882,9 @@ async function loadPublic() {
   }
 
 
-  /* PRODUSE */
+  /* =========================
+     PRODUSE
+  ========================= */
 
   const productsBox =
     document.getElementById(
@@ -1760,7 +2027,9 @@ document.addEventListener(
     updateCartUI();
 
 
-    /* FORMULAR OFERTĂ */
+    /* ====================================================
+       FORMULAR OFERTĂ
+    ==================================================== */
 
     const f =
       document.getElementById(
