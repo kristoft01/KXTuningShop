@@ -414,11 +414,6 @@ function openCheckout() {
   }
 
 
-  /*
-    Ascundem butonul FINALIZEAZĂ COMANDA
-    după ce intrăm în formular.
-  */
-
   document
     .querySelectorAll(
       'button[onclick="openCheckout()"]'
@@ -445,7 +440,6 @@ function openCheckout() {
       Finalizează comanda
     </h3>
 
-
     <label>
       Nume*
 
@@ -456,7 +450,6 @@ function openCheckout() {
         placeholder="Numele tău"
       >
     </label>
-
 
     <label>
       Telefon*
@@ -471,7 +464,6 @@ function openCheckout() {
       >
     </label>
 
-
     <div class="row two">
 
       <label>
@@ -484,7 +476,6 @@ function openCheckout() {
           placeholder="Ex: Bihor"
         >
       </label>
-
 
       <label>
         Localitate*
@@ -499,7 +490,6 @@ function openCheckout() {
 
     </div>
 
-
     <label>
       Stradă și număr*
 
@@ -510,7 +500,6 @@ function openCheckout() {
         placeholder="Ex: Str. Republicii nr. 10"
       >
     </label>
-
 
     <label>
       Cod poștal
@@ -523,7 +512,6 @@ function openCheckout() {
       >
     </label>
 
-
     <label>
       Observații
 
@@ -533,13 +521,11 @@ function openCheckout() {
       ></textarea>
     </label>
 
-
     <div class="checkout-payment">
 
       <div class="eyebrow">
         METODĂ DE PLATĂ
       </div>
-
 
       <div class="payment-options">
 
@@ -565,7 +551,6 @@ function openCheckout() {
 
         </label>
 
-
         <label class="payment-option">
 
           <input
@@ -589,7 +574,6 @@ function openCheckout() {
 
       </div>
 
-
       <div
         id="cardPaymentInfo"
         class="card-payment-info hidden"
@@ -600,7 +584,6 @@ function openCheckout() {
 
     </div>
 
-
     <button
       id="placeOrderButton"
       class="btn primary"
@@ -609,7 +592,6 @@ function openCheckout() {
     >
       PLASEAZĂ COMANDA →
     </button>
-
 
     <p
       id="checkoutMessage"
@@ -690,13 +672,11 @@ async function placeOrder() {
       ?.value
       .trim();
 
-
   const phone =
     document
       .getElementById('checkoutPhone')
       ?.value
       .trim();
-
 
   const county =
     document
@@ -704,13 +684,11 @@ async function placeOrder() {
       ?.value
       .trim();
 
-
   const city =
     document
       .getElementById('checkoutCity')
       ?.value
       .trim();
-
 
   const street =
     document
@@ -718,13 +696,11 @@ async function placeOrder() {
       ?.value
       .trim();
 
-
   const postalCode =
     document
       .getElementById('checkoutPostalCode')
       ?.value
       .trim() || '';
-
 
   const notes =
     document
@@ -732,29 +708,23 @@ async function placeOrder() {
       ?.value
       .trim() || '';
 
-
   const paymentMethod =
     document.querySelector(
       'input[name="paymentMethod"]:checked'
     )?.value || 'cash';
-
 
   const message =
     document.getElementById(
       'checkoutMessage'
     );
 
-
   const button =
     document.getElementById(
       'placeOrderButton'
     );
 
-
   if (!message) return;
 
-
-  /* VALIDARE */
 
   if (
     !name ||
@@ -771,11 +741,6 @@ async function placeOrder() {
     return;
   }
 
-
-  /*
-    Cardul va fi conectat la procesatorul
-    de plăți în pasul următor.
-  */
 
   if (paymentMethod === 'card') {
     message.textContent =
@@ -843,9 +808,7 @@ async function placeOrder() {
     crypto.randomUUID();
 
 
-  /* =========================
-     SALVARE COMANDĂ
-  ========================= */
+  /* SALVARE COMANDĂ */
 
   const {
     error: orderError
@@ -885,9 +848,7 @@ async function placeOrder() {
   }
 
 
-  /* =========================
-     PRODUSE COMANDĂ
-  ========================= */
+  /* PRODUSE COMANDĂ */
 
   const items =
     cart.map(item => ({
@@ -929,9 +890,7 @@ async function placeOrder() {
   }
 
 
-  /* =========================
-     EMAIL COMANDĂ
-  ========================= */
+  /* EMAIL COMANDĂ */
 
   try {
     const notificationResult =
@@ -978,9 +937,11 @@ async function placeOrder() {
   }
 
 
-  /* =========================
-     CONFIRMARE
-  ========================= */
+  /* ======================================================
+     CONFIRMARE COMANDĂ
+     IMPORTANT:
+     NU apelăm saveCart() înainte de afișarea confirmării.
+  ====================================================== */
 
   const orderNumber =
     orderId
@@ -1005,16 +966,61 @@ async function placeOrder() {
     );
 
 
-  cart = [];
-
-  saveCart();
-
+  /*
+    IMPORTANT:
+    Luăm formularul ÎNAINTE să golim coșul.
+  */
 
   const checkoutForm =
     document.getElementById(
       'checkoutForm'
     );
 
+
+  /*
+    Golim coșul, DAR NU folosim saveCart(),
+    pentru că saveCart() ar apela updateCartUI()
+    și ar șterge checkoutForm.
+  */
+
+  cart = [];
+
+  localStorage.setItem(
+    'kxCart',
+    JSON.stringify(cart)
+  );
+
+
+  /*
+    Actualizăm manual doar numărul de produse
+    și totalul din coș.
+  */
+
+  const cartCountElement =
+    document.getElementById(
+      'cartCount'
+    );
+
+  if (cartCountElement) {
+    cartCountElement.textContent = '0';
+  }
+
+
+  const cartTotalElement =
+    document.getElementById(
+      'cartTotal'
+    );
+
+  if (cartTotalElement) {
+    cartTotalElement.textContent =
+      '0.00 lei';
+  }
+
+
+  /*
+    Acum formularul încă există,
+    deci afișăm confirmarea.
+  */
 
   if (checkoutForm) {
     checkoutForm.innerHTML = `
