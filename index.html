@@ -13,7 +13,7 @@
 
   <meta
     name="description"
-    content="KXTuningShop - tuning, interior custom, lumini ambientale, multimedia, detailing si piese auto."
+    content="KXTuningShop - piese auto, tuning, interior custom, lumini ambientale, multimedia, detailing și servicii auto."
   >
 
   <link rel="stylesheet" href="styles.css">
@@ -21,16 +21,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
-
 <body>
 
+
 <!-- =========================
-     MENIU
+     HEADER
 ========================= -->
 
 <header class="nav">
 
-  <a class="logo-link" href="#home">
+  <a
+    class="logo-link"
+    href="#home"
+    aria-label="KXTuningShop"
+  >
     <img
       src="logo.jpg"
       alt="KXTuningShop"
@@ -38,24 +42,149 @@
   </a>
 
 
-  <nav>
-    <a href="#piese">Piese Auto</a>
-    <a href="#servicii">Servicii</a>
-    <a href="#lucrari">Lucrări</a>
-    <a href="#oferta">Cere Ofertă</a>
+  <!-- MENIU DESKTOP -->
+
+  <nav class="desktop-nav">
+
+    <a href="#home">
+      Acasă
+    </a>
+
+    <a href="#piese">
+      Produse
+    </a>
+
+    <a href="#servicii">
+      Servicii
+    </a>
+
+    <a href="#lucrari">
+      Lucrări
+    </a>
+
+    <a href="#oferta">
+      Cere Ofertă
+    </a>
+
   </nav>
 
 
-  <a
-    class="wa"
-    href="https://wa.me/40753911677?text=Salut!%20Sunt%20interesat%20de%20serviciile%20KXTuningShop."
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    WhatsApp ↗
-  </a>
+  <!-- BUTOANE DREAPTA -->
+
+  <div class="nav-actions">
+
+    <button
+      class="header-cart"
+      type="button"
+      onclick="toggleCart()"
+      aria-label="Deschide coșul"
+    >
+      🛒
+      <span class="header-cart-text">
+        COȘ
+      </span>
+
+      <span
+        class="header-cart-count"
+        id="cartCount"
+      >
+        0
+      </span>
+    </button>
+
+
+    <a
+      class="wa"
+      href="https://wa.me/40753911677?text=Salut!%20Sunt%20interesat%20de%20serviciile%20KXTuningShop."
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      WhatsApp ↗
+    </a>
+
+
+    <button
+      class="mobile-menu-button"
+      type="button"
+      onclick="toggleMobileMenu()"
+      aria-label="Deschide meniul"
+    >
+      ☰
+    </button>
+
+  </div>
 
 </header>
+
+
+
+<!-- =========================
+     MENIU TELEFON
+========================= -->
+
+<div
+  id="mobileMenu"
+  class="mobile-menu hidden"
+>
+
+  <div class="mobile-menu-head">
+
+    <strong>
+      MENIU
+    </strong>
+
+    <button
+      type="button"
+      onclick="toggleMobileMenu()"
+      aria-label="Închide meniul"
+    >
+      ×
+    </button>
+
+  </div>
+
+
+  <a
+    href="#home"
+    onclick="closeMobileMenu()"
+  >
+    Acasă
+  </a>
+
+
+  <a
+    href="#piese"
+    onclick="closeMobileMenu()"
+  >
+    Produse
+  </a>
+
+
+  <a
+    href="#servicii"
+    onclick="closeMobileMenu()"
+  >
+    Servicii
+  </a>
+
+
+  <a
+    href="#lucrari"
+    onclick="closeMobileMenu()"
+  >
+    Lucrări
+  </a>
+
+
+  <a
+    href="#oferta"
+    onclick="closeMobileMenu()"
+  >
+    Cere Ofertă
+  </a>
+
+</div>
+
 
 
 <main id="home">
@@ -102,19 +231,17 @@
 
       <a
         class="btn primary"
-        href="#oferta"
+        href="#piese"
       >
-        CERE OFERTĂ →
+        VEZI PRODUSELE →
       </a>
 
 
       <a
         class="btn"
-        href="https://wa.me/40753911677?text=Salut!%20Vreau%20o%20oferta%20pentru%20masina%20mea."
-        target="_blank"
-        rel="noopener noreferrer"
+        href="#oferta"
       >
-        💬 VORBEȘTE PE WHATSAPP
+        CERE OFERTĂ
       </a>
 
     </div>
@@ -145,29 +272,171 @@
 
   <div>
     <b>⚙</b>
-    <strong>PIESE AUTO</strong>
-    <small>Produse pentru proiectul tău</small>
+
+    <strong>
+      PIESE AUTO
+    </strong>
+
+    <small>
+      Produse pentru proiectul tău
+    </small>
   </div>
 
 
   <div>
     <b>🔧</b>
-    <strong>SERVICII COMPLETE</strong>
-    <small>De la interior la software</small>
+
+    <strong>
+      SERVICII COMPLETE
+    </strong>
+
+    <small>
+      De la interior la software
+    </small>
   </div>
 
 
   <div>
     <b>✦</b>
-    <strong>PERSONALIZARE</strong>
-    <small>Fă mașina diferită</small>
+
+    <strong>
+      PERSONALIZARE
+    </strong>
+
+    <small>
+      Fă mașina diferită
+    </small>
   </div>
 
 
   <div>
     <b>★</b>
-    <strong>EXPERIENȚĂ</strong>
-    <small>Pasiune pentru mașini</small>
+
+    <strong>
+      EXPERIENȚĂ
+    </strong>
+
+    <small>
+      Pasiune pentru mașini
+    </small>
+  </div>
+
+</section>
+
+
+
+<!-- =========================
+     PRODUSE
+========================= -->
+
+<section
+  id="piese"
+  class="section shop-section"
+>
+
+  <div class="heading">
+
+    <div>
+
+      <div class="eyebrow">
+        KXTUNINGSHOP
+      </div>
+
+      <h2>
+        PIESE <span>AUTO</span>
+      </h2>
+
+      <p>
+        Găsește rapid produsele potrivite pentru proiectul tău.
+      </p>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- CĂUTARE PRODUSE -->
+
+  <div class="shop-tools">
+
+    <div class="product-search">
+
+      <span>
+        🔎
+      </span>
+
+      <input
+        id="productSearch"
+        type="search"
+        placeholder="Caută produs..."
+        autocomplete="off"
+        oninput="filterProducts()"
+      >
+
+    </div>
+
+  </div>
+
+
+
+  <!-- CATEGORII -->
+
+  <div
+    id="productCategories"
+    class="product-categories"
+  >
+
+    <button
+      class="category-button active"
+      type="button"
+      data-category="all"
+      onclick="selectCategory('all', this)"
+    >
+      TOATE
+    </button>
+
+  </div>
+
+
+
+  <!-- INFO REZULTATE -->
+
+  <div class="product-results-head">
+
+    <span id="productResultsCount">
+      Produse
+    </span>
+
+  </div>
+
+
+
+  <!-- PRODUSE -->
+
+  <div
+    id="products"
+    class="product-grid"
+  ></div>
+
+
+
+  <!-- ÎNCARCĂ MAI MULTE -->
+
+  <div
+    id="loadMoreWrap"
+    class="load-more-wrap hidden"
+  >
+
+    <button
+      id="loadMoreProducts"
+      class="btn"
+      type="button"
+      onclick="loadMoreProducts()"
+    >
+      ÎNCARCĂ MAI MULTE
+    </button>
+
   </div>
 
 </section>
@@ -180,7 +449,7 @@
 
 <section
   id="servicii"
-  class="section"
+  class="section dark"
 >
 
   <div class="heading">
@@ -219,7 +488,7 @@
 
 <section
   id="lucrari"
-  class="section dark"
+  class="section"
 >
 
   <div class="heading">
@@ -253,118 +522,6 @@
 
 
 <!-- =========================
-     PIESE AUTO / SHOP
-========================= -->
-
-<section
-  id="piese"
-  class="section"
->
-
-  <div class="heading">
-
-    <div>
-
-      <div class="eyebrow">
-        SHOP
-      </div>
-
-      <h2>
-        PIESE <span>AUTO</span>
-      </h2>
-
-      <p>
-        Alege produsele pentru proiectul tău.
-      </p>
-
-    </div>
-
-
-    <button
-      class="outline cart-button"
-      type="button"
-      onclick="toggleCart()"
-    >
-      🛒 COȘ (<span id="cartCount">0</span>)
-    </button>
-
-  </div>
-
-
-  <div
-    id="products"
-    class="product-grid"
-  ></div>
-
-
-
-  <!-- =========================
-       COȘ
-  ========================= -->
-
-  <div
-    id="cartBox"
-    class="cart-box hidden"
-  >
-
-    <div class="cart-head">
-
-      <div>
-
-        <div class="eyebrow">
-          COMANDA TA
-        </div>
-
-        <h2>
-          COȘUL
-        </h2>
-
-      </div>
-
-
-      <button
-        class="x cart-close"
-        type="button"
-        onclick="toggleCart()"
-        aria-label="Închide coșul"
-      >
-        ×
-      </button>
-
-    </div>
-
-
-    <div id="cartItems"></div>
-
-
-    <div class="cart-total">
-
-      <span>
-        Total
-      </span>
-
-      <strong id="cartTotal">
-        0 lei
-      </strong>
-
-    </div>
-
-
-    <button
-      class="btn primary cart-checkout"
-      type="button"
-      onclick="openCheckout()"
-    >
-      FINALIZEAZĂ COMANDA →
-    </button>
-
-  </div>
-
-</section>
-
-
-
-<!-- =========================
      CERE OFERTĂ
 ========================= -->
 
@@ -387,24 +544,23 @@
 
     <p>
       Spune-ne ce mașină ai și ce ai vrea să îi facem.
-      Pentru o estimare cât mai bună, descrie lucrarea și,
-      dacă poți, atașează poze.
+      Pentru o estimare cât mai bună, descrie lucrarea.
     </p>
 
 
     <div class="checks">
+
       ✓ Răspuns rapid<br>
+
       ✓ Evaluare inițială gratuită<br>
+
       ✓ Discuție directă pe WhatsApp
+
     </div>
 
   </div>
 
 
-
-  <!-- =========================
-       FORMULAR OFERTĂ
-  ========================= -->
 
   <form id="quoteForm">
 
@@ -418,7 +574,6 @@
           name="marca"
           required
           placeholder="BMW"
-          autocomplete="off"
         >
       </label>
 
@@ -430,7 +585,6 @@
           name="model"
           required
           placeholder="Seria 5"
-          autocomplete="off"
         >
       </label>
 
@@ -442,7 +596,6 @@
           name="an"
           inputmode="numeric"
           placeholder="2012"
-          autocomplete="off"
         >
       </label>
 
@@ -458,7 +611,6 @@
         <input
           name="motor"
           placeholder="2.0D"
-          autocomplete="off"
         >
       </label>
 
@@ -479,6 +631,7 @@
 
 
     <label>
+
       Ce dorești să facem?
 
       <textarea
@@ -556,6 +709,87 @@
 
 
 <!-- =========================
+     COȘ - PANOU PESTE PAGINĂ
+========================= -->
+
+<div
+  id="cartOverlay"
+  class="cart-overlay hidden"
+  onclick="closeCartFromOverlay(event)"
+>
+
+  <aside
+    id="cartBox"
+    class="cart-drawer"
+  >
+
+    <div class="cart-head">
+
+      <div>
+
+        <div class="eyebrow">
+          COMANDA TA
+        </div>
+
+        <h2>
+          COȘUL
+        </h2>
+
+      </div>
+
+
+      <button
+        class="cart-close"
+        type="button"
+        onclick="toggleCart()"
+        aria-label="Închide coșul"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+
+    <div
+      id="cartItems"
+      class="cart-items"
+    ></div>
+
+
+
+    <div class="cart-bottom">
+
+      <div class="cart-total">
+
+        <span>
+          Total
+        </span>
+
+        <strong id="cartTotal">
+          0.00 lei
+        </strong>
+
+      </div>
+
+
+      <button
+        class="btn primary cart-checkout"
+        type="button"
+        onclick="openCheckout()"
+      >
+        FINALIZEAZĂ COMANDA →
+      </button>
+
+    </div>
+
+  </aside>
+
+</div>
+
+
+
+<!-- =========================
      FOOTER
 ========================= -->
 
@@ -580,12 +814,9 @@
 
 
 
-<!-- =========================
-     JAVASCRIPT
-========================= -->
-
 <script src="app.js"></script>
 
 
 </body>
+
 </html>
