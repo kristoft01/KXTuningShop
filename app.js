@@ -219,7 +219,6 @@ function updateCartUI() {
     count.textContent = cartCount();
   }
 
-
   const total =
     document.getElementById('cartTotal');
 
@@ -228,12 +227,10 @@ function updateCartUI() {
       cartTotal().toFixed(2) + ' lei';
   }
 
-
   const box =
     document.getElementById('cartItems');
 
   if (!box) return;
-
 
   if (!cart.length) {
     box.innerHTML = `
@@ -245,7 +242,6 @@ function updateCartUI() {
     return;
   }
 
-
   const subtotal = productsTotal();
   const shipping = shippingCost();
 
@@ -254,7 +250,6 @@ function updateCartUI() {
       0,
       FREE_SHIPPING_FROM - subtotal
     );
-
 
   const itemsHtml =
     cart.map(item => `
@@ -303,7 +298,6 @@ function updateCartUI() {
       </div>
     `).join('');
 
-
   const shippingHtml = `
     <div class="cart-shipping-summary">
 
@@ -348,9 +342,25 @@ function updateCartUI() {
     </div>
   `;
 
+  /*
+    BUTONUL CARE LIPSEA.
+    Acesta deschide formularul de checkout.
+  */
+
+  const checkoutButtonHtml = `
+    <button
+      class="btn primary cart-checkout"
+      type="button"
+      onclick="openCheckout()"
+    >
+      FINALIZEAZĂ COMANDA →
+    </button>
+  `;
 
   box.innerHTML =
-    itemsHtml + shippingHtml;
+    itemsHtml +
+    shippingHtml +
+    checkoutButtonHtml;
 }
 
 
@@ -501,14 +511,12 @@ function openCheckout() {
 
   if (!box) return;
 
-
   const old =
     document.getElementById('checkoutForm');
 
   if (old) {
     old.remove();
   }
-
 
   document
     .querySelectorAll(
@@ -518,18 +526,15 @@ function openCheckout() {
       button.style.display = 'none';
     });
 
-
   const subtotal = productsTotal();
   const shipping = shippingCost();
   const total = cartTotal();
-
 
   const form =
     document.createElement('div');
 
   form.id = 'checkoutForm';
   form.className = 'checkout-form';
-
 
   form.innerHTML = `
 
@@ -726,9 +731,7 @@ function openCheckout() {
 
   `;
 
-
   box.appendChild(form);
-
 
   setTimeout(() => {
     form.scrollIntoView({
@@ -761,7 +764,6 @@ function updatePaymentMethod() {
 
   if (!selected) return;
 
-
   if (selected.value === 'card') {
     if (cardInfo) {
       cardInfo.classList.remove('hidden');
@@ -787,6 +789,7 @@ function updatePaymentMethod() {
 /* ========================================================
    PLASEAZĂ COMANDA
 ======================================================== */
+
 async function placeOrder() {
   if (!cart.length) return;
 
@@ -831,11 +834,6 @@ async function placeOrder() {
 
   if (!message) return;
 
-
-  /* =========================
-     VALIDARE
-  ========================= */
-
   if (
     !name ||
     !phone ||
@@ -851,7 +849,6 @@ async function placeOrder() {
     return;
   }
 
-
   if (paymentMethod === 'card') {
     message.textContent =
       'Plata cu cardul nu este încă activă. Selectează Ramburs pentru a continua.';
@@ -860,11 +857,6 @@ async function placeOrder() {
 
     return;
   }
-
-
-  /* =========================
-     ADRESĂ
-  ========================= */
 
   const addressParts = [
     street,
@@ -881,11 +873,6 @@ async function placeOrder() {
   const address =
     addressParts.join(', ');
 
-
-  /* =========================
-     TOTALURI
-  ========================= */
-
   const subtotal =
     productsTotal();
 
@@ -895,16 +882,10 @@ async function placeOrder() {
   const total =
     cartTotal();
 
-
   const paymentText =
     paymentMethod === 'cash'
       ? 'Ramburs'
       : 'Card';
-
-
-  /* =========================
-     OBSERVAȚII COMANDĂ
-  ========================= */
 
   let finalNotes =
     `Metodă de plată: ${paymentText}\n` +
@@ -921,11 +902,6 @@ async function placeOrder() {
       `\nObservații: ${notes}`;
   }
 
-
-  /* =========================
-     LOADING
-  ========================= */
-
   if (button) {
     button.disabled = true;
 
@@ -939,14 +915,8 @@ async function placeOrder() {
   message.className =
     'success';
 
-
   const orderId =
     crypto.randomUUID();
-
-
-  /* ========================================================
-     SALVARE COMANDĂ
-  ======================================================== */
 
   const {
     error: orderError
@@ -964,11 +934,6 @@ async function placeOrder() {
       customer_address:
         address,
 
-      /*
-        IMPORTANT:
-        aici salvăm TOTALUL FINAL,
-        adică produse + transport.
-      */
       total:
         total,
 
@@ -978,7 +943,6 @@ async function placeOrder() {
       notes:
         finalNotes
     });
-
 
   if (orderError) {
     console.error(
@@ -1002,11 +966,6 @@ async function placeOrder() {
     return;
   }
 
-
-  /* ========================================================
-     PRODUSELE COMENZII
-  ======================================================== */
-
   const items =
     cart.map(item => ({
       order_id:
@@ -1025,13 +984,11 @@ async function placeOrder() {
         Number(item.price) || 0
     }));
 
-
   const {
     error: itemError
   } = await sb
     .from('order_items')
     .insert(items);
-
 
   if (itemError) {
     console.error(
@@ -1055,11 +1012,6 @@ async function placeOrder() {
     return;
   }
 
-
-  /* ========================================================
-     EMAIL COMANDĂ
-  ======================================================== */
-
   try {
     const notificationResult =
       await sb.functions.invoke(
@@ -1078,17 +1030,9 @@ async function placeOrder() {
             customer_address:
               address,
 
-            /*
-              Totalul final
-            */
             total:
               total.toFixed(2),
 
-            /*
-              Trimitem și valorile separat.
-              Vom modifica Edge Function-ul
-              după ce testăm coșul.
-            */
             subtotal:
               subtotal.toFixed(2),
 
@@ -1119,7 +1063,6 @@ async function placeOrder() {
         }
       );
 
-
     if (notificationResult.error) {
       console.error(
         'Comanda a fost salvată, dar notificarea email nu a fost trimisă:',
@@ -1134,46 +1077,26 @@ async function placeOrder() {
     );
   }
 
-
-  /* ========================================================
-     NUMĂR COMANDĂ
-  ======================================================== */
-
   const orderNumber =
     orderId
       .slice(0, 8)
       .toUpperCase();
-
-
-  /* ========================================================
-     WHATSAPP
-  ======================================================== */
 
   const shippingText =
     shipping === 0
       ? 'GRATUIT'
       : `${shipping.toFixed(2)} lei`;
 
-
   const whatsappMessage =
     `Salut! Am plasat o comandă pe KXTuningShop.\n\n` +
-
     `Comanda: ${orderNumber}\n` +
-
     `Nume: ${name}\n` +
-
     `Telefon: ${phone}\n` +
-
     `Adresă: ${address}\n\n` +
-
     `Produse: ${subtotal.toFixed(2)} lei\n` +
-
     `Transport: ${shippingText}\n` +
-
     `TOTAL: ${total.toFixed(2)} lei\n\n` +
-
     `Plată: ${paymentText}`;
-
 
   const whatsappUrl =
     `https://wa.me/${WA}?text=` +
@@ -1181,21 +1104,10 @@ async function placeOrder() {
       whatsappMessage
     );
 
-
-  /* ========================================================
-     PĂSTRĂM FORMULARUL PENTRU CONFIRMARE
-  ======================================================== */
-
   const checkoutForm =
     document.getElementById(
       'checkoutForm'
     );
-
-
-  /* ========================================================
-     GOLIM COȘUL
-     FĂRĂ saveCart()
-  ======================================================== */
 
   cart = [];
 
@@ -1203,13 +1115,6 @@ async function placeOrder() {
     'kxCart',
     JSON.stringify(cart)
   );
-
-
-  /*
-    Actualizăm doar badge-ul.
-    NU chemăm updateCartUI(),
-    pentru că ar șterge confirmarea.
-  */
 
   const cartCountElement =
     document.getElementById(
@@ -1221,7 +1126,6 @@ async function placeOrder() {
       '0';
   }
 
-
   const cartTotalElement =
     document.getElementById(
       'cartTotal'
@@ -1231,11 +1135,6 @@ async function placeOrder() {
     cartTotalElement.textContent =
       '0.00 lei';
   }
-
-
-  /* ========================================================
-     CONFIRMARE PE ECRAN
-  ======================================================== */
 
   if (checkoutForm) {
     checkoutForm.innerHTML = `
@@ -1252,7 +1151,6 @@ async function placeOrder() {
         Comanda ta a fost înregistrată.
       </p>
 
-
       <div class="checkout-order-summary">
 
         <div>
@@ -1265,7 +1163,6 @@ async function placeOrder() {
           </strong>
         </div>
 
-
         <div>
           <span>
             Produse
@@ -1275,7 +1172,6 @@ async function placeOrder() {
             ${esc(subtotal.toFixed(2))} lei
           </strong>
         </div>
-
 
         <div>
           <span>
@@ -1287,7 +1183,6 @@ async function placeOrder() {
           </strong>
         </div>
 
-
         <div>
           <span>
             Metodă de plată
@@ -1297,7 +1192,6 @@ async function placeOrder() {
             ${esc(paymentText)}
           </strong>
         </div>
-
 
         <div class="checkout-final-total">
 
@@ -1313,12 +1207,10 @@ async function placeOrder() {
 
       </div>
 
-
       <p>
         Te vom contacta telefonic pentru
         confirmarea comenzii.
       </p>
-
 
       <a
         class="btn primary"
@@ -1330,7 +1222,6 @@ async function placeOrder() {
       </a>
 
     `;
-
 
     checkoutForm.scrollIntoView({
       behavior: 'smooth',
@@ -1352,7 +1243,6 @@ function buildProductCategories() {
 
   if (!container) return;
 
-
   const categories = [
     ...new Set(
       allProducts
@@ -1371,7 +1261,6 @@ function buildProductCategories() {
       )
   );
 
-
   container.innerHTML = `
     <button
       class="category-button active"
@@ -1382,7 +1271,6 @@ function buildProductCategories() {
       TOATE
     </button>
   `;
-
 
   categories.forEach(category => {
     const button =
@@ -1402,7 +1290,6 @@ function buildProductCategories() {
     button.textContent =
       category.toUpperCase();
 
-
     button.addEventListener(
       'click',
       () => {
@@ -1412,7 +1299,6 @@ function buildProductCategories() {
         );
       }
     );
-
 
     container.appendChild(
       button
@@ -1435,7 +1321,6 @@ function selectCategory(
   visibleProducts =
     PRODUCTS_PER_PAGE;
 
-
   document
     .querySelectorAll(
       '.category-button'
@@ -1446,13 +1331,11 @@ function selectCategory(
       );
     });
 
-
   if (button) {
     button.classList.add(
       'active'
     );
   }
-
 
   filterProducts();
 }
@@ -1468,12 +1351,10 @@ function filterProducts() {
       'productSearch'
     );
 
-
   const search =
     normalizeText(
       searchInput?.value || ''
     );
-
 
   filteredProducts =
     allProducts.filter(product => {
@@ -1483,12 +1364,10 @@ function filterProducts() {
           product.category || ''
         ).trim();
 
-
       const categoryMatch =
         selectedCategory === 'all' ||
         productCategory ===
           selectedCategory;
-
 
       const searchableText =
         normalizeText(
@@ -1497,13 +1376,11 @@ function filterProducts() {
           `${product.category || ''}`
         );
 
-
       const searchMatch =
         !search ||
         searchableText.includes(
           search
         );
-
 
       return (
         categoryMatch &&
@@ -1511,10 +1388,8 @@ function filterProducts() {
       );
     });
 
-
   visibleProducts =
     PRODUCTS_PER_PAGE;
-
 
   renderProducts();
 }
@@ -1530,7 +1405,6 @@ function createProductCard(x) {
       ? Number(x.price)
       : null;
 
-
   const productForCart = {
     id:
       x.id,
@@ -1541,7 +1415,6 @@ function createProductCard(x) {
     price:
       price
   };
-
 
   return `
 
@@ -1617,21 +1490,17 @@ function renderProducts() {
       'products'
     );
 
-
   const resultsCount =
     document.getElementById(
       'productResultsCount'
     );
-
 
   const loadMoreWrap =
     document.getElementById(
       'loadMoreWrap'
     );
 
-
   if (!productsBox) return;
-
 
   if (resultsCount) {
     const total =
@@ -1643,14 +1512,12 @@ function renderProducts() {
         : `${total} produse`;
   }
 
-
   if (!filteredProducts.length) {
     productsBox.innerHTML = `
       <div class="empty">
         Nu am găsit produse pentru această căutare.
       </div>
     `;
-
 
     if (loadMoreWrap) {
       loadMoreWrap.classList.add(
@@ -1661,19 +1528,16 @@ function renderProducts() {
     return;
   }
 
-
   const productsToShow =
     filteredProducts.slice(
       0,
       visibleProducts
     );
 
-
   productsBox.innerHTML =
     productsToShow
       .map(createProductCard)
       .join('');
-
 
   if (loadMoreWrap) {
     if (
@@ -1722,7 +1586,6 @@ async function loadPublic() {
         }
       );
 
-
   const projectsResult =
     await sb
       .from('projects')
@@ -1733,7 +1596,6 @@ async function loadPublic() {
           ascending: false
         }
       );
-
 
   const productsResult =
     await sb
@@ -1746,7 +1608,6 @@ async function loadPublic() {
         }
       );
 
-
   const services =
     servicesResult.data;
 
@@ -1755,11 +1616,6 @@ async function loadPublic() {
 
   const products =
     productsResult.data;
-
-
-  /* =========================
-     SERVICII
-  ========================= */
 
   const s =
     services?.length
@@ -1771,12 +1627,10 @@ async function loadPublic() {
           })
         );
 
-
   const servicesBox =
     document.getElementById(
       'services'
     );
-
 
   if (servicesBox) {
     servicesBox.innerHTML =
@@ -1799,16 +1653,10 @@ async function loadPublic() {
       `).join('');
   }
 
-
-  /* =========================
-     SELECT SERVICII
-  ========================= */
-
   const serviceSelect =
     document.getElementById(
       'serviceSelect'
     );
-
 
   if (serviceSelect) {
     serviceSelect.innerHTML =
@@ -1820,16 +1668,10 @@ async function loadPublic() {
       `).join('');
   }
 
-
-  /* =========================
-     LUCRĂRI
-  ========================= */
-
   const projectsBox =
     document.getElementById(
       'projects'
     );
-
 
   if (projectsBox) {
     if (projects?.length) {
@@ -1881,16 +1723,10 @@ async function loadPublic() {
     }
   }
 
-
-  /* =========================
-     PRODUSE
-  ========================= */
-
   const productsBox =
     document.getElementById(
       'products'
     );
-
 
   if (productsBox) {
     if (productsResult.error) {
@@ -1929,12 +1765,10 @@ async function loadPublic() {
         </div>
       `;
 
-
       const loadMoreWrap =
         document.getElementById(
           'loadMoreWrap'
         );
-
 
       if (loadMoreWrap) {
         loadMoreWrap.classList.add(
@@ -1944,11 +1778,8 @@ async function loadPublic() {
     }
   }
 
-
   updateCartUI();
-}
-
-
+} 
 /* ========================================================
    WHATSAPP
 ======================================================== */
@@ -1973,12 +1804,10 @@ document.addEventListener(
       return;
     }
 
-
     const menu =
       document.getElementById(
         'mobileMenu'
       );
-
 
     if (menu) {
       menu.classList.add(
@@ -1986,19 +1815,16 @@ document.addEventListener(
       );
     }
 
-
     const cartOverlay =
       document.getElementById(
         'cartOverlay'
       );
-
 
     if (cartOverlay) {
       cartOverlay.classList.add(
         'hidden'
       );
     }
-
 
     document.body.classList.remove(
       'no-scroll'
@@ -2023,8 +1849,26 @@ document.addEventListener(
       await loadPublic();
     }
 
-
     updateCartUI();
+
+
+    /* ====================================================
+       CĂUTARE PRODUSE
+    ==================================================== */
+
+    const productSearch =
+      document.getElementById(
+        'productSearch'
+      );
+
+    if (productSearch) {
+      productSearch.addEventListener(
+        'input',
+        () => {
+          filterProducts();
+        }
+      );
+    }
 
 
     /* ====================================================
@@ -2036,7 +1880,6 @@ document.addEventListener(
         'quoteForm'
       );
 
-
     if (f) {
       f.addEventListener(
         'submit',
@@ -2044,10 +1887,8 @@ document.addEventListener(
 
           event.preventDefault();
 
-
           const fd =
             new FormData(f);
-
 
           const q = {
             name:
@@ -2079,32 +1920,27 @@ document.addEventListener(
               `${fd.get('detalii') || ''}`
           };
 
-
           const {
             error
           } = await sb
             .from('quote_requests')
             .insert(q);
 
-
           const msg =
             document.getElementById(
               'success'
             );
-
 
           const formWhatsApp =
             document.getElementById(
               'formWhatsApp'
             );
 
-
           if (error) {
             console.error(
               'Eroare cerere ofertă:',
               error
             );
-
 
             if (msg) {
               msg.textContent =
@@ -2113,7 +1949,6 @@ document.addEventListener(
               msg.className =
                 'error';
             }
-
 
             if (formWhatsApp) {
               formWhatsApp.href =
@@ -2127,7 +1962,6 @@ document.addEventListener(
             return;
           }
 
-
           if (msg) {
             msg.textContent =
               'Cererea a fost trimisă! Te vom contacta cât mai repede.';
@@ -2136,7 +1970,6 @@ document.addEventListener(
               'success';
           }
 
-
           if (formWhatsApp) {
             formWhatsApp.href =
               whatsapp(
@@ -2144,7 +1977,6 @@ document.addEventListener(
                 `${q.car_make} ${q.car_model}.`
               );
           }
-
 
           f.reset();
         }
