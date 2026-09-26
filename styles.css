@@ -2672,3 +2672,630 @@ th {
     font-size: 14px;
   }
 }
+/* ========================================================
+   KXTUNINGSHOP - DETALII PRODUS
+======================================================== */
+
+
+/* =========================
+   CARD PRODUS CLICKABIL
+========================= */
+
+.product-card {
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #3b4856;
+
+  box-shadow:
+    0 14px 35px rgba(0, 0, 0, 0.28);
+}
+
+.product-card img {
+  transition: transform 0.25s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.02);
+}
+
+
+/* ========================================================
+   FUNDAL MODAL PRODUS
+======================================================== */
+
+.product-modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 500;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 25px;
+
+  background: rgba(0, 0, 0, 0.82);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+
+  overflow-y: auto;
+}
+
+
+/* ========================================================
+   FEREASTRA PRODUS
+======================================================== */
+
+.product-modal {
+  position: relative;
+
+  width: min(1100px, 100%);
+
+  max-height: calc(100vh - 50px);
+
+  overflow-y: auto;
+
+  background: #0d1116;
+
+  border: 1px solid #303943;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.7);
+}
+
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+.product-modal::-webkit-scrollbar {
+  width: 7px;
+}
+
+.product-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.product-modal::-webkit-scrollbar-thumb {
+  background: #303943;
+
+  border-radius: 999px;
+}
+
+
+/* ========================================================
+   BUTON X
+======================================================== */
+
+.product-modal-close {
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  z-index: 10;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 45px;
+  height: 45px;
+
+  padding: 0;
+
+  background: rgba(13, 17, 22, 0.94);
+
+  color: #fff;
+
+  border: 1px solid #3a4551;
+
+  border-radius: 50%;
+
+  font-size: 29px;
+
+  line-height: 1;
+
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.product-modal-close:hover {
+  background: #e62e40;
+
+  border-color: #e62e40;
+
+  transform: rotate(5deg);
+}
+
+
+/* ========================================================
+   CONȚINUT PRODUS
+======================================================== */
+
+.product-modal-content {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  min-height: 580px;
+}
+
+
+/* ========================================================
+   PARTEA CU POZA
+======================================================== */
+
+.product-detail-image-wrap {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+
+  padding: 45px;
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      #17212c 0,
+      #0a0e13 55%,
+      #080b0f 100%
+    );
+
+  border-right: 1px solid #202831;
+}
+
+.product-detail-image {
+  display: block;
+
+  width: 100%;
+
+  max-width: 500px;
+  max-height: 560px;
+
+  object-fit: contain;
+
+  border-radius: 10px;
+}
+
+
+/* IMAGINE LIPSĂ */
+
+.product-detail-no-image {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  min-height: 400px;
+
+  color: #65717e;
+
+  border: 1px dashed #303943;
+
+  border-radius: 10px;
+
+  font-size: 15px;
+}
+
+
+/* ========================================================
+   INFORMAȚII PRODUS
+======================================================== */
+
+.product-detail-info {
+  display: flex;
+
+  flex-direction: column;
+
+  min-width: 0;
+
+  padding: 55px 45px 45px;
+}
+
+
+/* =========================
+   CATEGORIE
+========================= */
+
+.product-detail-category {
+  margin: 0 55px 13px 0;
+
+  color: #4ea1ff;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================
+   TITLU
+========================= */
+
+.product-detail-title {
+  margin: 0 45px 18px 0;
+
+  color: #f5f7fb;
+
+  font-size: clamp(26px, 3vw, 40px);
+
+  line-height: 1.12;
+
+  letter-spacing: -0.025em;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ========================================================
+   PREȚ
+======================================================== */
+
+.product-detail-price {
+  margin: 4px 0 25px;
+
+  padding-bottom: 23px;
+
+  color: #e62e40;
+
+  border-bottom: 1px solid #202831;
+
+  font-size: 30px;
+
+  font-weight: 900;
+}
+
+.product-detail-price.ask-price {
+  color: #f5f7fb;
+
+  font-size: 22px;
+}
+
+
+/* ========================================================
+   DESCRIERE
+======================================================== */
+
+.product-detail-description-title {
+  margin: 0 0 11px;
+
+  color: #fff;
+
+  font-size: 13px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.product-detail-description {
+  margin: 0;
+
+  color: #aeb8c5;
+
+  font-size: 14px;
+
+  line-height: 1.75;
+
+  white-space: pre-line;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ========================================================
+   ACȚIUNI
+======================================================== */
+
+.product-detail-actions {
+  display: grid;
+
+  grid-template-columns: 1fr;
+
+  gap: 10px;
+
+  margin-top: auto;
+
+  padding-top: 30px;
+}
+
+.product-detail-actions .btn {
+  width: 100%;
+
+  min-height: 52px;
+
+  padding: 14px 18px;
+}
+
+
+/* ========================================================
+   BUTON ADAUGĂ ÎN COȘ
+======================================================== */
+
+.product-detail-add-cart {
+  background: #e62e40;
+
+  color: #fff;
+
+  border-color: #e62e40;
+}
+
+.product-detail-add-cart:hover {
+  background: #f13b4c;
+
+  border-color: #f13b4c;
+}
+
+
+/* ========================================================
+   BUTON WHATSAPP
+======================================================== */
+
+.product-detail-whatsapp {
+  background: #0e1814;
+
+  color: #fff;
+
+  border-color: #1c7e4d;
+}
+
+.product-detail-whatsapp:hover {
+  background: #12663f;
+
+  border-color: #239b60;
+}
+
+
+/* ========================================================
+   TEXT AJUTĂTOR
+======================================================== */
+
+.product-detail-note {
+  margin: 13px 0 0;
+
+  color: #6f7b88;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+
+/* ========================================================
+   TABLET
+======================================================== */
+
+@media (max-width: 900px) {
+
+  .product-modal-overlay {
+    padding: 15px;
+  }
+
+  .product-modal {
+    max-height: calc(100vh - 30px);
+  }
+
+  .product-modal-content {
+    grid-template-columns: 1fr;
+
+    min-height: 0;
+  }
+
+  .product-detail-image-wrap {
+    min-height: 420px;
+
+    padding: 35px;
+
+    border-right: 0;
+
+    border-bottom: 1px solid #202831;
+  }
+
+  .product-detail-image {
+    max-height: 430px;
+  }
+
+  .product-detail-info {
+    padding: 35px;
+  }
+
+}
+
+
+/* ========================================================
+   TELEFON
+======================================================== */
+
+@media (max-width: 600px) {
+
+  .product-modal-overlay {
+    align-items: flex-start;
+
+    padding: 0;
+
+    background: #07090c;
+  }
+
+  .product-modal {
+    width: 100%;
+
+    min-height: 100dvh;
+    max-height: none;
+
+    overflow: visible;
+
+    border: 0;
+
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .product-modal-content {
+    display: block;
+
+    min-height: 100dvh;
+  }
+
+
+  /* X */
+
+  .product-modal-close {
+    position: fixed;
+
+    top: 13px;
+    right: 13px;
+
+    width: 43px;
+    height: 43px;
+
+    background: rgba(8, 11, 15, 0.92);
+
+    border-color: #3a4551;
+
+    font-size: 27px;
+
+    box-shadow:
+      0 5px 20px rgba(0, 0, 0, 0.4);
+  }
+
+
+  /* POZĂ */
+
+  .product-detail-image-wrap {
+    min-height: 0;
+
+    padding: 70px 18px 25px;
+
+    background: #090c10;
+
+    border-bottom: 1px solid #202831;
+  }
+
+  .product-detail-image {
+    width: 100%;
+
+    max-width: 100%;
+
+    max-height: none;
+
+    aspect-ratio: 1 / 1;
+
+    object-fit: contain;
+
+    border-radius: 8px;
+  }
+
+  .product-detail-no-image {
+    min-height: 300px;
+  }
+
+
+  /* INFO */
+
+  .product-detail-info {
+    padding: 25px 18px 35px;
+  }
+
+  .product-detail-category {
+    margin-right: 0;
+
+    font-size: 10px;
+  }
+
+  .product-detail-title {
+    margin-right: 0;
+
+    font-size: 25px;
+
+    line-height: 1.16;
+  }
+
+  .product-detail-price {
+    margin-top: 3px;
+    margin-bottom: 22px;
+
+    padding-bottom: 20px;
+
+    font-size: 26px;
+  }
+
+  .product-detail-price.ask-price {
+    font-size: 20px;
+  }
+
+  .product-detail-description {
+    font-size: 14px;
+
+    line-height: 1.7;
+  }
+
+  .product-detail-actions {
+    padding-top: 25px;
+  }
+
+  .product-detail-actions .btn {
+    min-height: 52px;
+
+    font-size: 12px;
+  }
+
+}
+
+
+/* ========================================================
+   TELEFOANE FOARTE MICI
+======================================================== */
+
+@media (max-width: 370px) {
+
+  .product-detail-info {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .product-detail-image-wrap {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .product-detail-title {
+    font-size: 22px;
+  }
+
+}
