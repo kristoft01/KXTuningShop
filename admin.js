@@ -358,9 +358,35 @@ async function renderQuotes() {
     </div>
   `;
 
-  document.getElementById('badge').textContent =
-    data.length;
+  const badge = document.getElementById('badge');
+
+  if (badge) {
+    badge.textContent = data.length;
+  }
 }
+
+async function updateOrderStatus(id, status) {
+  const result = await sb
+    .from('orders')
+    .update({
+      status: status
+    })
+    .eq('id', id);
+
+  if (result.error) {
+    alert(
+      'Nu s-a putut schimba statusul: ' +
+      result.error.message
+    );
+
+    renderOrders();
+    return;
+  }
+
+  renderOrders();
+}
+
+window.updateOrderStatus = updateOrderStatus;
 
 async function renderOrders() {
   const result = await sb
@@ -425,6 +451,8 @@ async function renderOrders() {
       products = 'Fără produse';
     }
 
+    const status = order.status || 'noua';
+
     rows += `
       <tr>
         <td>
@@ -452,7 +480,31 @@ async function renderOrders() {
         </td>
 
         <td>
-          ${aesc(order.status || 'noua')}
+          <select onchange="updateOrderStatus('${aesc(order.id)}', this.value)">
+            <option
+              value="noua"
+              ${status === 'noua' || status === 'nou' ? 'selected' : ''}>
+              🆕 Nouă
+            </option>
+
+            <option
+              value="procesare"
+              ${status === 'procesare' ? 'selected' : ''}>
+              🔧 În procesare
+            </option>
+
+            <option
+              value="finalizata"
+              ${status === 'finalizata' ? 'selected' : ''}>
+              ✅ Finalizată
+            </option>
+
+            <option
+              value="anulata"
+              ${status === 'anulata' ? 'selected' : ''}>
+              ❌ Anulată
+            </option>
+          </select>
         </td>
 
         <td>
@@ -752,4 +804,5 @@ document.addEventListener(
       };
 
     openTab('dash');
-  });
+  }
+);
