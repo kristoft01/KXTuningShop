@@ -13,6 +13,8 @@ const tables = {
   }
 };
 
+const IMAGE_BUCKET = 'imagini produse';
+
 let current = 'dash';
 
 function aesc(s) {
@@ -98,6 +100,52 @@ async function count(table) {
     });
 
   return result.count || 0;
+}
+
+async function uploadProductImage(file) {
+  if (!file) {
+    return null;
+  }
+
+  const extension =
+    file.name && file.name.indexOf('.') !== -1
+      ? file.name.split('.').pop().toLowerCase()
+      : 'jpg';
+
+  const safeExtension = extension.replace(/[^a-z0-9]/g, '') || 'jpg';
+
+  const fileName =
+    'products/' +
+    Date.now() +
+    '-' +
+    Math.random().toString(36).substring(2, 10) +
+    '.' +
+    safeExtension;
+
+  const uploadResult = await sb.storage
+    .from(IMAGE_BUCKET)
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (uploadResult.error) {
+    throw uploadResult.error;
+  }
+
+  const publicResult = sb.storage
+    .from(IMAGE_BUCKET)
+    .getPublicUrl(fileName);
+
+  if (
+    !publicResult ||
+    !publicResult.data ||
+    !publicResult.data.publicUrl
+  ) {
+    throw new Error('Nu s-a putut obține adresa imaginii.');
+  }
+
+  return publicResult.data.publicUrl;
 }
 
 async function renderDash() {
@@ -618,28 +666,87 @@ function modal(html) {
   document.body.appendChild(d);
 }
 
+function createFieldHtml(tab, field, value, editing) {
+  const checkbox =
+    field === 'available' || field === 'active';
+
+  if (checkbox) {
+    const checked =
+      editing
+        ? (value ? 'checked' : '')
+        : 'checked';
+
+    return `
+      <label>
+        ${field}
+        <input
+          name="${field}"
+          type="checkbox"
+          ${checked}>
+      </label>
+    `;
+  }
+
+  if (tab === 'products' && field === 'image_url') {
+    let preview = '';
+
+    if (editing && value) {
+      preview = `
+        <div style="margin-top:10px;">
+          <img
+            src="${aesc(value)}"
+            alt="Imagine produs"
+            style="max-width:180px;max-height:180px;object-fit:cover;border-radius:8px;">
+        </div>
+      `;
+    }
+
+    return `
+      <label>
+        Imagine produs
+        <input
+          name="product_image"
+          type="file"
+          accept="image/*">
+      </label>
+
+      ${
+        editing
+          ? '<small>Dacă nu alegi altă imagine, rămâne imaginea actuală.</small>'
+          : '<small>Alege imaginea produsului din calculator sau telefon.</small>'
+      }
+
+      ${preview}
+
+      <input
+        name="image_url"
+        type="hidden"
+        value="${aesc(value || '')}">
+    `;
+  }
+
+  return `
+    <label>
+      ${field}
+      <input
+        name="${field}"
+        value="${aesc(value || '')}">
+    </label>
+  `;
+}
+
 window.newItem = function(tab) {
   const c = tables[tab];
 
   let fields = '';
 
   c.fields.forEach(function(f) {
-    const checkbox =
-      f === 'available' || f === 'active';
-
-    fields += `
-      <label>
-        ${f}
-
-        <input
-          name="${f}"
-          ${
-            checkbox
-              ? 'type="checkbox" checked'
-              : ''
-          }>
-      </label>
-    `;
+    fields += createFieldHtml(
+      tab,
+      f,
+      '',
+      false
+    );
   });
 
   modal(`
@@ -648,7 +755,7 @@ window.newItem = function(tab) {
     <form id="itemForm">
       ${fields}
 
-      <button class="btn primary">
+      <button class="btn primary" type="submit">
         SALVEAZĂ
       </button>
     </form>
@@ -659,39 +766,84 @@ window.newItem = function(tab) {
       e.preventDefault();
 
       const form = document.getElementById('itemForm');
-      const o = {};
+      const saveButton = form.querySelector('button[type="submit"]');
 
-      c.fields.forEach(function(f) {
-        const el = form.elements[f];
+      saveButton.disabled = true;
+      saveButton.textContent = 'SE SALVEAZĂ...';
 
-        if (el.type === 'checkbox') {
-          o[f] = el.checked;
-        } else {
-          o[f] = el.value || null;
+      try {
+        let uploadedImageUrl = null;
+
+        if (tab === 'products') {
+          const fileInput = form.elements['product_image'];
+
+          if (
+            fileInput &&
+            fileInput.files &&
+            fileInput.files.length
+          ) {
+            saveButton.textContent = 'SE ÎNCARCĂ IMAGINEA...';
+
+            uploadedImageUrl =
+              await uploadProductImage(fileInput.files[0]);
+          }
         }
 
-        if (
-          (f === 'price' || f === 'price_from') &&
-          o[f]
-        ) {
-          o[f] = Number(o[f]);
+        const o = {};
+
+        c.fields.forEach(function(f) {
+          const el = form.elements[f];
+
+          if (!el) {
+            return;
+          }
+
+          if (el.type === 'checkbox') {
+            o[f] = el.checked;
+          } else {
+            o[f] = el.value || null;
+          }
+
+          if (
+            (f === 'price' || f === 'price_from') &&
+            o[f]
+          ) {
+            o[f] = Number(o[f]);
+          }
+        });
+
+        if (tab === 'products' && uploadedImageUrl) {
+          o.image_url = uploadedImageUrl;
         }
-      });
 
-      const result = await sb
-        .from(tab)
-        .insert(o);
+        saveButton.textContent = 'SE SALVEAZĂ...';
 
-      if (result.error) {
-        alert(result.error.message);
-        return;
+        const result = await sb
+          .from(tab)
+          .insert(o);
+
+        if (result.error) {
+          alert(result.error.message);
+          return;
+        }
+
+        document
+          .querySelector('.modal-wrap')
+          .remove();
+
+        renderTable(tab);
+        renderDash();
+      } catch (error) {
+        alert(
+          'Nu s-a putut încărca imaginea: ' +
+          (error.message || error)
+        );
+      } finally {
+        if (document.body.contains(saveButton)) {
+          saveButton.disabled = false;
+          saveButton.textContent = 'SALVEAZĂ';
+        }
       }
-
-      document
-        .querySelector('.modal-wrap')
-        .remove();
-
-      renderTable(tab);
     };
 };
 
@@ -701,28 +853,12 @@ window.editItem = function(tab, x) {
   let fields = '';
 
   c.fields.forEach(function(f) {
-    const checkbox =
-      f === 'available' || f === 'active';
-
-    fields += `
-      <label>
-        ${f}
-
-        <input
-          name="${f}"
-          ${
-            checkbox
-              ? 'type="checkbox"'
-              : ''
-          }
-
-          ${
-            checkbox
-              ? (x[f] ? 'checked' : '')
-              : 'value="' + aesc(x[f] || '') + '"'
-          }>
-      </label>
-    `;
+    fields += createFieldHtml(
+      tab,
+      f,
+      x[f],
+      true
+    );
   });
 
   modal(`
@@ -731,7 +867,7 @@ window.editItem = function(tab, x) {
     <form id="itemForm">
       ${fields}
 
-      <button class="btn primary">
+      <button class="btn primary" type="submit">
         SALVEAZĂ
       </button>
     </form>
@@ -742,40 +878,84 @@ window.editItem = function(tab, x) {
       e.preventDefault();
 
       const form = document.getElementById('itemForm');
-      const o = {};
+      const saveButton = form.querySelector('button[type="submit"]');
 
-      c.fields.forEach(function(f) {
-        const el = form.elements[f];
+      saveButton.disabled = true;
+      saveButton.textContent = 'SE SALVEAZĂ...';
 
-        if (el.type === 'checkbox') {
-          o[f] = el.checked;
-        } else {
-          o[f] = el.value || null;
+      try {
+        let uploadedImageUrl = null;
+
+        if (tab === 'products') {
+          const fileInput = form.elements['product_image'];
+
+          if (
+            fileInput &&
+            fileInput.files &&
+            fileInput.files.length
+          ) {
+            saveButton.textContent = 'SE ÎNCARCĂ IMAGINEA...';
+
+            uploadedImageUrl =
+              await uploadProductImage(fileInput.files[0]);
+          }
         }
 
-        if (
-          (f === 'price' || f === 'price_from') &&
-          o[f]
-        ) {
-          o[f] = Number(o[f]);
+        const o = {};
+
+        c.fields.forEach(function(f) {
+          const el = form.elements[f];
+
+          if (!el) {
+            return;
+          }
+
+          if (el.type === 'checkbox') {
+            o[f] = el.checked;
+          } else {
+            o[f] = el.value || null;
+          }
+
+          if (
+            (f === 'price' || f === 'price_from') &&
+            o[f]
+          ) {
+            o[f] = Number(o[f]);
+          }
+        });
+
+        if (tab === 'products' && uploadedImageUrl) {
+          o.image_url = uploadedImageUrl;
         }
-      });
 
-      const result = await sb
-        .from(tab)
-        .update(o)
-        .eq('id', x.id);
+        saveButton.textContent = 'SE SALVEAZĂ...';
 
-      if (result.error) {
-        alert(result.error.message);
-        return;
+        const result = await sb
+          .from(tab)
+          .update(o)
+          .eq('id', x.id);
+
+        if (result.error) {
+          alert(result.error.message);
+          return;
+        }
+
+        document
+          .querySelector('.modal-wrap')
+          .remove();
+
+        renderTable(tab);
+      } catch (error) {
+        alert(
+          'Nu s-a putut încărca imaginea: ' +
+          (error.message || error)
+        );
+      } finally {
+        if (document.body.contains(saveButton)) {
+          saveButton.disabled = false;
+          saveButton.textContent = 'SALVEAZĂ';
+        }
       }
-
-      document
-        .querySelector('.modal-wrap')
-        .remove();
-
-      renderTable(tab);
     };
 };
 
@@ -795,6 +975,7 @@ window.deleteItem = async function(tab, id) {
   }
 
   renderTable(tab);
+  renderDash();
 };
 
 window.openTab = async function(tab) {
@@ -806,9 +987,16 @@ window.openTab = async function(tab) {
       x.classList.add('hidden');
     });
 
-  document
-    .getElementById(tab)
-    .classList.remove('hidden');
+  const target = document.getElementById(tab);
+
+  if (!target) {
+    console.error(
+      'Nu există secțiunea cu id="' + tab + '" în admin.html'
+    );
+    return;
+  }
+
+  target.classList.remove('hidden');
 
   document
     .querySelectorAll('aside button[data-tab]')
