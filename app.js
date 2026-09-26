@@ -378,10 +378,10 @@ async function placeOrder(){
     NOTIFICARE EMAIL
 
     Comanda și produsele sunt deja salvate.
-    Acum apelăm Edge Function-ul order-notification.
+    Apelăm Edge Function-ul order-notification.
 
-    Dacă emailul nu se poate trimite,
-    comanda NU este anulată și checkout-ul continuă.
+    Dacă emailul nu poate fi trimis,
+    comanda rămâne salvată și checkout-ul continuă.
   */
 
   try{
@@ -436,30 +436,81 @@ async function placeOrder(){
 
   }
 
-  message.textContent=
-    'Comanda a fost trimisă cu succes! Te vom contacta cât mai repede.';
+  /*
+    CONFIRMAREA COMENZII
 
-  message.className='success';
+    Nu mai deschidem WhatsApp automat.
+    Clientul primește confirmarea și poate alege
+    dacă vrea să trimită și mesaj pe WhatsApp.
+  */
+
+  const orderNumber=
+    orderId.slice(0,8).toUpperCase();
 
   const whatsappMessage=
-    `Salut! Am plasat o comandă pe KXTuningShop.%0A`+
-    `Nume: ${encodeURIComponent(name)}%0A`+
-    `Telefon: ${encodeURIComponent(phone)}%0A`+
-    `Adresă: ${encodeURIComponent(address)}%0A`+
-    `Total: ${encodeURIComponent(total.toFixed(2))} lei`;
+    `Salut! Am plasat o comandă pe KXTuningShop.\n`+
+    `Comanda: ${orderNumber}\n`+
+    `Nume: ${name}\n`+
+    `Telefon: ${phone}\n`+
+    `Adresă: ${address}\n`+
+    `Total: ${total.toFixed(2)} lei`;
+
+  const whatsappUrl=
+    `https://wa.me/${WA}?text=${encodeURIComponent(whatsappMessage)}`;
 
   cart=[];
 
   saveCart();
 
-  setTimeout(()=>{
+  const checkoutForm=
+    document.getElementById('checkoutForm');
 
-    window.open(
-      `https://wa.me/${WA}?text=${whatsappMessage}`,
-      '_blank'
-    );
+  if(checkoutForm){
 
-  },500);
+    checkoutForm.innerHTML=`
+
+      <div class="eyebrow">
+        COMANDĂ CONFIRMATĂ
+      </div>
+
+      <h3>
+        ✅ Comandă plasată cu succes!
+      </h3>
+
+      <p>
+        Comanda ta a fost înregistrată.
+      </p>
+
+      <p>
+        Număr comandă:
+        <strong>${esc(orderNumber)}</strong>
+      </p>
+
+      <p>
+        Total:
+        <strong>${esc(total.toFixed(2))} lei</strong>
+      </p>
+
+      <p>
+        Te vom contacta telefonic pentru confirmarea comenzii.
+      </p>
+
+      <a
+        class="btn primary"
+        href="${esc(whatsappUrl)}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        💬 TRIMITE ȘI PE WHATSAPP
+      </a>
+
+    `;
+
+    checkoutForm.scrollIntoView({
+      behavior:'smooth',
+      block:'center'
+    });
+  }
 }
 
 async function loadPublic(){
