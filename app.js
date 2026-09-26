@@ -14,37 +14,30 @@ const WA = '40753911677';
 ======================================================== */
 
 const fallbackServices = [
-
   [
     'Interior Custom',
     'Retapițare plafon, stâlpi și fețe de uși • Alcantara • colantări'
   ],
-
   [
     'Ambient & Light Design',
     'Lumini ambientale premium • plafon înstelat • stele în uși'
   ],
-
   [
     'Personalizare',
     'Centuri colorate • design interior unic • elemente custom'
   ],
-
   [
     'Multimedia & Audio',
     'Navigații CarPlay • camere reverse • sisteme audio'
   ],
-
   [
     'Detailing',
     'Detailing interior complet • polish faruri'
   ],
-
   [
     'Service & Software',
     'Mentenanță • diagnoză • codări & adaptări'
   ]
-
 ];
 
 
@@ -53,11 +46,8 @@ const fallbackServices = [
 ======================================================== */
 
 let allProducts = [];
-
 let filteredProducts = [];
-
 let selectedCategory = 'all';
-
 let visibleProducts = 12;
 
 const PRODUCTS_PER_PAGE = 12;
@@ -77,7 +67,6 @@ let cart = JSON.parse(
 ======================================================== */
 
 function esc(s = '') {
-
   return String(s).replace(
     /[&<>'"]/g,
     c => ({
@@ -88,22 +77,19 @@ function esc(s = '') {
       '"': '&quot;'
     }[c])
   );
-
 }
 
 
 /* ========================================================
-   NORMALIZARE TEXT PENTRU CĂUTARE
+   NORMALIZARE TEXT
 ======================================================== */
 
 function normalizeText(value = '') {
-
   return String(value)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim();
-
 }
 
 
@@ -112,7 +98,6 @@ function normalizeText(value = '') {
 ======================================================== */
 
 function toggleMobileMenu() {
-
   const menu =
     document.getElementById('mobileMenu');
 
@@ -127,12 +112,10 @@ function toggleMobileMenu() {
     'no-scroll',
     willOpen
   );
-
 }
 
 
 function closeMobileMenu() {
-
   const menu =
     document.getElementById('mobileMenu');
 
@@ -143,7 +126,6 @@ function closeMobileMenu() {
   document.body.classList.remove(
     'no-scroll'
   );
-
 }
 
 
@@ -152,29 +134,25 @@ function closeMobileMenu() {
 ======================================================== */
 
 function saveCart() {
-
   localStorage.setItem(
     'kxCart',
     JSON.stringify(cart)
   );
 
   updateCartUI();
-
 }
 
 
 /* ========================================================
-   NUMĂR PRODUSE ÎN COȘ
+   NUMĂR PRODUSE COȘ
 ======================================================== */
 
 function cartCount() {
-
   return cart.reduce(
     (sum, item) =>
       sum + Number(item.quantity || 0),
     0
   );
-
 }
 
 
@@ -183,18 +161,13 @@ function cartCount() {
 ======================================================== */
 
 function cartTotal() {
-
   return cart.reduce(
-
     (sum, item) =>
       sum +
       (Number(item.price) || 0) *
       Number(item.quantity || 0),
-
     0
-
   );
-
 }
 
 
@@ -203,15 +176,11 @@ function cartTotal() {
 ======================================================== */
 
 function updateCartUI() {
-
   const count =
     document.getElementById('cartCount');
 
   if (count) {
-
-    count.textContent =
-      cartCount();
-
+    count.textContent = cartCount();
   }
 
 
@@ -219,10 +188,8 @@ function updateCartUI() {
     document.getElementById('cartTotal');
 
   if (total) {
-
     total.textContent =
       cartTotal().toFixed(2) + ' lei';
-
   }
 
 
@@ -233,7 +200,6 @@ function updateCartUI() {
 
 
   if (!cart.length) {
-
     box.innerHTML = `
       <div class="empty">
         Coșul este gol.
@@ -241,16 +207,13 @@ function updateCartUI() {
     `;
 
     return;
-
   }
 
 
   box.innerHTML = cart.map(item => `
-
     <div class="cart-item">
 
       <div>
-
         <strong>
           ${esc(item.name)}
         </strong>
@@ -258,9 +221,7 @@ function updateCartUI() {
         <small>
           ${Number(item.price).toFixed(2)} lei / buc.
         </small>
-
       </div>
-
 
       <div class="cart-controls">
 
@@ -271,11 +232,9 @@ function updateCartUI() {
           −
         </button>
 
-
         <span>
           ${item.quantity}
         </span>
-
 
         <button
           type="button"
@@ -283,7 +242,6 @@ function updateCartUI() {
         >
           +
         </button>
-
 
         <button
           type="button"
@@ -296,9 +254,7 @@ function updateCartUI() {
       </div>
 
     </div>
-
   `).join('');
-
 }
 
 
@@ -307,38 +263,29 @@ function updateCartUI() {
 ======================================================== */
 
 function toggleCart() {
-
   const overlay =
     document.getElementById('cartOverlay');
 
   if (!overlay) return;
 
-
   const willOpen =
     overlay.classList.contains('hidden');
 
-
   if (willOpen) {
-
     overlay.classList.remove('hidden');
 
     document.body.classList.add(
       'no-scroll'
     );
-
   } else {
-
     overlay.classList.add('hidden');
 
     document.body.classList.remove(
       'no-scroll'
     );
-
   }
 
-
   updateCartUI();
-
 }
 
 
@@ -347,23 +294,18 @@ function toggleCart() {
 ======================================================== */
 
 function closeCartFromOverlay(event) {
-
   const overlay =
     document.getElementById('cartOverlay');
 
   if (!overlay) return;
 
-
   if (event.target === overlay) {
-
     overlay.classList.add('hidden');
 
     document.body.classList.remove(
       'no-scroll'
     );
-
   }
-
 }
 
 
@@ -372,7 +314,6 @@ function closeCartFromOverlay(event) {
 ======================================================== */
 
 function addToCart(product) {
-
   const existing =
     cart.find(
       item =>
@@ -380,36 +321,18 @@ function addToCart(product) {
         String(product.id)
     );
 
-
   if (existing) {
-
     existing.quantity++;
-
   } else {
-
     cart.push({
-
       id: product.id,
-
       name: product.name,
-
-      price:
-        Number(product.price) || 0,
-
+      price: Number(product.price) || 0,
       quantity: 1
-
     });
-
   }
 
-
   saveCart();
-
-
-  /*
-    Deschidem automat coșul după adăugare.
-    Clientul vede imediat că produsul a intrat.
-  */
 
   const overlay =
     document.getElementById('cartOverlay');
@@ -418,15 +341,12 @@ function addToCart(product) {
     overlay &&
     overlay.classList.contains('hidden')
   ) {
-
     overlay.classList.remove('hidden');
 
     document.body.classList.add(
       'no-scroll'
     );
-
   }
-
 }
 
 
@@ -435,32 +355,24 @@ function addToCart(product) {
 ======================================================== */
 
 function changeQuantity(id, change) {
-
   const item =
     cart.find(
       item =>
         String(item.id) === String(id)
     );
 
-
   if (!item) return;
-
 
   item.quantity += change;
 
-
   if (item.quantity <= 0) {
-
     cart = cart.filter(
       item =>
         String(item.id) !== String(id)
     );
-
   }
 
-
   saveCart();
-
 }
 
 
@@ -469,14 +381,12 @@ function changeQuantity(id, change) {
 ======================================================== */
 
 function removeFromCart(id) {
-
   cart = cart.filter(
     item =>
       String(item.id) !== String(id)
   );
 
   saveCart();
-
 }
 
 
@@ -485,15 +395,10 @@ function removeFromCart(id) {
 ======================================================== */
 
 function openCheckout() {
-
   if (!cart.length) {
-
     alert('Coșul este gol.');
-
     return;
-
   }
-
 
   const box =
     document.getElementById('cartItems');
@@ -502,27 +407,32 @@ function openCheckout() {
 
 
   const old =
-    document.getElementById(
-      'checkoutForm'
-    );
-
+    document.getElementById('checkoutForm');
 
   if (old) {
-
     old.remove();
-
   }
+
+
+  /*
+    Ascundem butonul FINALIZEAZĂ COMANDA
+    după ce intrăm în formular.
+  */
+
+  document
+    .querySelectorAll(
+      'button[onclick="openCheckout()"]'
+    )
+    .forEach(button => {
+      button.style.display = 'none';
+    });
 
 
   const form =
     document.createElement('div');
 
-
-  form.id =
-    'checkoutForm';
-
-  form.className =
-    'checkout-form';
+  form.id = 'checkoutForm';
+  form.className = 'checkout-form';
 
 
   form.innerHTML = `
@@ -531,14 +441,12 @@ function openCheckout() {
       DATE CLIENT
     </div>
 
-
     <h3>
       Finalizează comanda
     </h3>
 
 
     <label>
-
       Nume*
 
       <input
@@ -547,12 +455,10 @@ function openCheckout() {
         autocomplete="name"
         placeholder="Numele tău"
       >
-
     </label>
 
 
     <label>
-
       Telefon*
 
       <input
@@ -560,39 +466,143 @@ function openCheckout() {
         type="tel"
         required
         autocomplete="tel"
+        inputmode="tel"
         placeholder="07xx xxx xxx"
       >
-
     </label>
 
 
+    <div class="row two">
+
+      <label>
+        Județ*
+
+        <input
+          id="checkoutCounty"
+          required
+          autocomplete="address-level1"
+          placeholder="Ex: Bihor"
+        >
+      </label>
+
+
+      <label>
+        Localitate*
+
+        <input
+          id="checkoutCity"
+          required
+          autocomplete="address-level2"
+          placeholder="Ex: Oradea"
+        >
+      </label>
+
+    </div>
+
+
     <label>
+      Stradă și număr*
 
-      Adresă de livrare*
-
-      <textarea
-        id="checkoutAddress"
+      <input
+        id="checkoutStreet"
         required
         autocomplete="street-address"
-        placeholder="Stradă, număr, localitate, județ"
-      ></textarea>
-
+        placeholder="Ex: Str. Republicii nr. 10"
+      >
     </label>
 
 
     <label>
+      Cod poștal
 
+      <input
+        id="checkoutPostalCode"
+        inputmode="numeric"
+        autocomplete="postal-code"
+        placeholder="Ex: 410000"
+      >
+    </label>
+
+
+    <label>
       Observații
 
       <textarea
         id="checkoutNotes"
         placeholder="Detalii suplimentare despre comandă"
       ></textarea>
-
     </label>
 
 
+    <div class="checkout-payment">
+
+      <div class="eyebrow">
+        METODĂ DE PLATĂ
+      </div>
+
+
+      <div class="payment-options">
+
+        <label class="payment-option">
+
+          <input
+            type="radio"
+            name="paymentMethod"
+            value="cash"
+            checked
+            onchange="updatePaymentMethod()"
+          >
+
+          <span>
+            <strong>
+              💵 Ramburs
+            </strong>
+
+            <small>
+              Plătești la primirea coletului
+            </small>
+          </span>
+
+        </label>
+
+
+        <label class="payment-option">
+
+          <input
+            type="radio"
+            name="paymentMethod"
+            value="card"
+            onchange="updatePaymentMethod()"
+          >
+
+          <span>
+            <strong>
+              💳 Card
+            </strong>
+
+            <small>
+              Plată online cu cardul
+            </small>
+          </span>
+
+        </label>
+
+      </div>
+
+
+      <div
+        id="cardPaymentInfo"
+        class="card-payment-info hidden"
+      >
+        Plata online cu cardul este în curs de activare.
+        Pentru moment poți finaliza comanda prin ramburs.
+      </div>
+
+    </div>
+
+
     <button
+      id="placeOrderButton"
       class="btn primary"
       type="button"
       onclick="placeOrder()"
@@ -613,17 +623,56 @@ function openCheckout() {
 
 
   setTimeout(() => {
-
     form.scrollIntoView({
-
       behavior: 'smooth',
-
       block: 'start'
-
     });
-
   }, 100);
+}
 
+
+/* ========================================================
+   METODĂ DE PLATĂ
+======================================================== */
+
+function updatePaymentMethod() {
+  const selected =
+    document.querySelector(
+      'input[name="paymentMethod"]:checked'
+    );
+
+  const cardInfo =
+    document.getElementById(
+      'cardPaymentInfo'
+    );
+
+  const button =
+    document.getElementById(
+      'placeOrderButton'
+    );
+
+  if (!selected) return;
+
+
+  if (selected.value === 'card') {
+    if (cardInfo) {
+      cardInfo.classList.remove('hidden');
+    }
+
+    if (button) {
+      button.textContent =
+        'CARD - ÎN CURS DE ACTIVARE';
+    }
+  } else {
+    if (cardInfo) {
+      cardInfo.classList.add('hidden');
+    }
+
+    if (button) {
+      button.textContent =
+        'PLASEAZĂ COMANDA →';
+    }
+  }
 }
 
 
@@ -632,7 +681,6 @@ function openCheckout() {
 ======================================================== */
 
 async function placeOrder() {
-
   if (!cart.length) return;
 
 
@@ -650,11 +698,32 @@ async function placeOrder() {
       .trim();
 
 
-  const address =
+  const county =
     document
-      .getElementById('checkoutAddress')
+      .getElementById('checkoutCounty')
       ?.value
       .trim();
+
+
+  const city =
+    document
+      .getElementById('checkoutCity')
+      ?.value
+      .trim();
+
+
+  const street =
+    document
+      .getElementById('checkoutStreet')
+      ?.value
+      .trim();
+
+
+  const postalCode =
+    document
+      .getElementById('checkoutPostalCode')
+      ?.value
+      .trim() || '';
 
 
   const notes =
@@ -664,25 +733,98 @@ async function placeOrder() {
       .trim() || '';
 
 
+  const paymentMethod =
+    document.querySelector(
+      'input[name="paymentMethod"]:checked'
+    )?.value || 'cash';
+
+
   const message =
     document.getElementById(
       'checkoutMessage'
     );
 
 
+  const button =
+    document.getElementById(
+      'placeOrderButton'
+    );
+
+
   if (!message) return;
 
 
-  if (!name || !phone || !address) {
+  /* VALIDARE */
 
+  if (
+    !name ||
+    !phone ||
+    !county ||
+    !city ||
+    !street
+  ) {
     message.textContent =
-      'Completează numele, telefonul și adresa.';
+      'Completează toate câmpurile obligatorii.';
 
-    message.className =
-      'error';
+    message.className = 'error';
 
     return;
+  }
 
+
+  /*
+    Cardul va fi conectat la procesatorul
+    de plăți în pasul următor.
+  */
+
+  if (paymentMethod === 'card') {
+    message.textContent =
+      'Plata cu cardul nu este încă activă. Selectează Ramburs pentru a continua.';
+
+    message.className = 'error';
+
+    return;
+  }
+
+
+  const addressParts = [
+    street,
+    city,
+    county
+  ];
+
+
+  if (postalCode) {
+    addressParts.push(
+      `Cod poștal: ${postalCode}`
+    );
+  }
+
+
+  const address =
+    addressParts.join(', ');
+
+
+  const paymentText =
+    paymentMethod === 'cash'
+      ? 'Ramburs'
+      : 'Card';
+
+
+  const finalNotes =
+    `Metodă de plată: ${paymentText}` +
+    (
+      notes
+        ? `\nObservații: ${notes}`
+        : ''
+    );
+
+
+  if (button) {
+    button.disabled = true;
+
+    button.textContent =
+      'SE TRIMITE COMANDA...';
   }
 
 
@@ -710,31 +852,21 @@ async function placeOrder() {
   } = await sb
     .from('orders')
     .insert({
-
       id: orderId,
-
       customer_name: name,
-
       customer_phone: phone,
-
       customer_address: address,
-
       total: total,
-
       status: 'new',
-
-      notes: notes
-
+      notes: finalNotes
     });
 
 
   if (orderError) {
-
     console.error(
       'Eroare creare comandă:',
       orderError
     );
-
 
     message.textContent =
       'Nu am putut trimite comanda. Încearcă din nou.';
@@ -742,8 +874,14 @@ async function placeOrder() {
     message.className =
       'error';
 
-    return;
+    if (button) {
+      button.disabled = false;
 
+      button.textContent =
+        'PLASEAZĂ COMANDA →';
+    }
+
+    return;
   }
 
 
@@ -753,18 +891,11 @@ async function placeOrder() {
 
   const items =
     cart.map(item => ({
-
       order_id: orderId,
-
       product_id: item.id,
-
       product_name: item.name,
-
       quantity: item.quantity,
-
-      price:
-        Number(item.price) || 0
-
+      price: Number(item.price) || 0
     }));
 
 
@@ -776,12 +907,10 @@ async function placeOrder() {
 
 
   if (itemError) {
-
     console.error(
       'Eroare produse comandă:',
       itemError
     );
-
 
     message.textContent =
       'Comanda a fost creată, dar produsele nu au putut fi salvate.';
@@ -789,8 +918,14 @@ async function placeOrder() {
     message.className =
       'error';
 
-    return;
+    if (button) {
+      button.disabled = false;
 
+      button.textContent =
+        'PLASEAZĂ COMANDA →';
+    }
+
+    return;
   }
 
 
@@ -799,30 +934,21 @@ async function placeOrder() {
   ========================= */
 
   try {
-
     const notificationResult =
       await sb.functions.invoke(
         'order-notification',
         {
-
           body: {
-
             order_id: orderId,
-
             customer_name: name,
-
             customer_phone: phone,
-
             customer_address: address,
-
-            total:
-              total.toFixed(2),
-
-            notes: notes,
+            total: total.toFixed(2),
+            notes: finalNotes,
+            payment_method: paymentText,
 
             items:
               items.map(item => ({
-
                 product_name:
                   item.product_name,
 
@@ -831,31 +957,24 @@ async function placeOrder() {
 
                 price:
                   item.price
-
               }))
-
           }
-
         }
       );
 
 
     if (notificationResult.error) {
-
       console.error(
         'Comanda a fost salvată, dar notificarea email nu a fost trimisă:',
         notificationResult.error
       );
-
     }
 
   } catch (notificationError) {
-
     console.error(
       'Comanda a fost salvată, dar notificarea email a eșuat:',
       notificationError
     );
-
   }
 
 
@@ -870,33 +989,21 @@ async function placeOrder() {
 
 
   const whatsappMessage =
-
     `Salut! Am plasat o comandă pe KXTuningShop.\n` +
-
     `Comanda: ${orderNumber}\n` +
-
     `Nume: ${name}\n` +
-
     `Telefon: ${phone}\n` +
-
     `Adresă: ${address}\n` +
-
+    `Plată: ${paymentText}\n` +
     `Total: ${total.toFixed(2)} lei`;
 
 
   const whatsappUrl =
-
     `https://wa.me/${WA}?text=` +
-
     encodeURIComponent(
       whatsappMessage
     );
 
-
-  /*
-    Golim coșul după ce comanda
-    și produsele au fost salvate.
-  */
 
   cart = [];
 
@@ -910,23 +1017,19 @@ async function placeOrder() {
 
 
   if (checkoutForm) {
-
     checkoutForm.innerHTML = `
 
       <div class="eyebrow">
         COMANDĂ CONFIRMATĂ
       </div>
 
-
       <h3>
         ✅ Comandă plasată cu succes!
       </h3>
 
-
       <p>
         Comanda ta a fost înregistrată.
       </p>
-
 
       <p>
         Număr comandă:
@@ -935,6 +1038,12 @@ async function placeOrder() {
         </strong>
       </p>
 
+      <p>
+        Metodă de plată:
+        <strong>
+          ${esc(paymentText)}
+        </strong>
+      </p>
 
       <p>
         Total:
@@ -943,11 +1052,9 @@ async function placeOrder() {
         </strong>
       </p>
 
-
       <p>
         Te vom contacta telefonic pentru confirmarea comenzii.
       </p>
-
 
       <a
         class="btn primary"
@@ -962,15 +1069,10 @@ async function placeOrder() {
 
 
     checkoutForm.scrollIntoView({
-
       behavior: 'smooth',
-
       block: 'start'
-
     });
-
   }
-
 }
 
 
@@ -979,37 +1081,24 @@ async function placeOrder() {
 ======================================================== */
 
 function buildProductCategories() {
-
   const container =
     document.getElementById(
       'productCategories'
     );
 
-
   if (!container) return;
 
 
-  /*
-    Luăm automat categoriile existente
-    în produsele din Supabase.
-  */
-
   const categories = [
-
     ...new Set(
-
       allProducts
-
         .map(product =>
           String(
             product.category || ''
           ).trim()
         )
-
         .filter(Boolean)
-
     )
-
   ].sort(
     (a, b) =>
       a.localeCompare(
@@ -1020,7 +1109,6 @@ function buildProductCategories() {
 
 
   container.innerHTML = `
-
     <button
       class="category-button active"
       type="button"
@@ -1029,29 +1117,22 @@ function buildProductCategories() {
     >
       TOATE
     </button>
-
   `;
 
 
   categories.forEach(category => {
-
     const button =
       document.createElement(
         'button'
       );
 
-
-    button.type =
-      'button';
-
+    button.type = 'button';
 
     button.className =
       'category-button';
 
-
     button.dataset.category =
       category;
-
 
     button.textContent =
       category.toUpperCase();
@@ -1060,12 +1141,10 @@ function buildProductCategories() {
     button.addEventListener(
       'click',
       () => {
-
         selectCategory(
           category,
           button
         );
-
       }
     );
 
@@ -1073,9 +1152,7 @@ function buildProductCategories() {
     container.appendChild(
       button
     );
-
   });
-
 }
 
 
@@ -1087,10 +1164,8 @@ function selectCategory(
   category,
   button
 ) {
-
   selectedCategory =
     category;
-
 
   visibleProducts =
     PRODUCTS_PER_PAGE;
@@ -1101,25 +1176,20 @@ function selectCategory(
       '.category-button'
     )
     .forEach(btn => {
-
       btn.classList.remove(
         'active'
       );
-
     });
 
 
   if (button) {
-
     button.classList.add(
       'active'
     );
-
   }
 
 
   filterProducts();
-
 }
 
 
@@ -1128,7 +1198,6 @@ function selectCategory(
 ======================================================== */
 
 function filterProducts() {
-
   const searchInput =
     document.getElementById(
       'productSearch'
@@ -1151,29 +1220,21 @@ function filterProducts() {
 
 
       const categoryMatch =
-
         selectedCategory === 'all' ||
-
         productCategory ===
           selectedCategory;
 
 
       const searchableText =
         normalizeText(
-
           `${product.name || ''} ` +
-
           `${product.description || ''} ` +
-
           `${product.category || ''}`
-
         );
 
 
       const searchMatch =
-
         !search ||
-
         searchableText.includes(
           search
         );
@@ -1183,28 +1244,19 @@ function filterProducts() {
         categoryMatch &&
         searchMatch
       );
-
     });
 
-
-  /*
-    La o căutare nouă nu vrem să
-    rămânem cu sute de produse afișate.
-  */
 
   if (
     visibleProducts <
     PRODUCTS_PER_PAGE
   ) {
-
     visibleProducts =
       PRODUCTS_PER_PAGE;
-
   }
 
 
   renderProducts();
-
 }
 
 
@@ -1213,7 +1265,6 @@ function filterProducts() {
 ======================================================== */
 
 function createProductCard(x) {
-
   const price =
     x.price != null
       ? Number(x.price)
@@ -1221,13 +1272,9 @@ function createProductCard(x) {
 
 
   const productForCart = {
-
     id: x.id,
-
     name: x.name,
-
     price: price
-
   };
 
 
@@ -1247,44 +1294,33 @@ function createProductCard(x) {
           : ''
       }
 
-
       <div>
 
         <small>
           ${esc(x.category || 'Produs')}
         </small>
 
-
         <h3>
           ${esc(x.name)}
         </h3>
-
 
         <p>
           ${esc(x.description || '')}
         </p>
 
-
         <strong>
-
           ${
             price != null &&
             Number.isFinite(price)
-
               ? `${price.toFixed(2)} lei`
-
               : 'Cere preț'
           }
-
         </strong>
-
 
         ${
           price != null &&
           Number.isFinite(price)
-
             ? `
-
               <button
                 class="btn primary add-cart"
                 type="button"
@@ -1294,9 +1330,7 @@ function createProductCard(x) {
               >
                 🛒 ADAUGĂ ÎN COȘ
               </button>
-
             `
-
             : ''
         }
 
@@ -1305,7 +1339,6 @@ function createProductCard(x) {
     </article>
 
   `;
-
 }
 
 
@@ -1314,7 +1347,6 @@ function createProductCard(x) {
 ======================================================== */
 
 function renderProducts() {
-
   const productsBox =
     document.getElementById(
       'products'
@@ -1337,44 +1369,31 @@ function renderProducts() {
 
 
   if (resultsCount) {
-
     const total =
       filteredProducts.length;
 
-
     resultsCount.textContent =
-
       total === 1
-
         ? '1 produs'
-
         : `${total} produse`;
-
   }
 
 
   if (!filteredProducts.length) {
-
     productsBox.innerHTML = `
-
       <div class="empty">
         Nu am găsit produse pentru această căutare.
       </div>
-
     `;
 
 
     if (loadMoreWrap) {
-
       loadMoreWrap.classList.add(
         'hidden'
       );
-
     }
 
-
     return;
-
   }
 
 
@@ -1386,33 +1405,25 @@ function renderProducts() {
 
 
   productsBox.innerHTML =
-
     productsToShow
       .map(createProductCard)
       .join('');
 
 
   if (loadMoreWrap) {
-
     if (
       visibleProducts <
       filteredProducts.length
     ) {
-
       loadMoreWrap.classList.remove(
         'hidden'
       );
-
     } else {
-
       loadMoreWrap.classList.add(
         'hidden'
       );
-
     }
-
   }
-
 }
 
 
@@ -1421,13 +1432,10 @@ function renderProducts() {
 ======================================================== */
 
 function loadMoreProducts() {
-
   visibleProducts +=
     PRODUCTS_PER_PAGE;
 
-
   renderProducts();
-
 }
 
 
@@ -1436,10 +1444,6 @@ function loadMoreProducts() {
 ======================================================== */
 
 async function loadPublic() {
-
-  /* =========================
-     SERVICII
-  ========================= */
 
   const servicesResult =
     await sb
@@ -1454,10 +1458,6 @@ async function loadPublic() {
       );
 
 
-  /* =========================
-     LUCRĂRI
-  ========================= */
-
   const projectsResult =
     await sb
       .from('projects')
@@ -1469,10 +1469,6 @@ async function loadPublic() {
         }
       );
 
-
-  /* =========================
-     PRODUSE
-  ========================= */
 
   const productsResult =
     await sb
@@ -1489,34 +1485,23 @@ async function loadPublic() {
   const services =
     servicesResult.data;
 
-
   const projects =
     projectsResult.data;
-
 
   const products =
     productsResult.data;
 
 
-  /* ======================================================
-     SERVICII
-  ====================================================== */
+  /* SERVICII */
 
   const s =
     services?.length
-
       ? services
-
       : fallbackServices.map(
-
           ([name, description]) => ({
-
             name,
-
             description
-
           })
-
         );
 
 
@@ -1527,36 +1512,28 @@ async function loadPublic() {
 
 
   if (servicesBox) {
-
     servicesBox.innerHTML =
       s.map(x => `
-
         <article class="card service-card">
 
           <div class="card-icon">
             ✦
           </div>
 
-
           <h3>
             ${esc(x.name)}
           </h3>
-
 
           <p>
             ${esc(x.description || '')}
           </p>
 
         </article>
-
       `).join('');
-
   }
 
 
-  /* ======================================================
-     SELECT SERVICII
-  ====================================================== */
+  /* SELECT SERVICII */
 
   const serviceSelect =
     document.getElementById(
@@ -1565,25 +1542,17 @@ async function loadPublic() {
 
 
   if (serviceSelect) {
-
     serviceSelect.innerHTML =
-
       '<option value="">Alege serviciul</option>' +
-
       s.map(x => `
-
         <option value="${esc(x.name)}">
           ${esc(x.name)}
         </option>
-
       `).join('');
-
   }
 
 
-  /* ======================================================
-     LUCRĂRI
-  ====================================================== */
+  /* LUCRĂRI */
 
   const projectsBox =
     document.getElementById(
@@ -1592,82 +1561,57 @@ async function loadPublic() {
 
 
   if (projectsBox) {
-
     if (projects?.length) {
-
       projectsBox.innerHTML =
-
         projects.map(x => `
-
           <article class="project-card">
 
             ${
               x.image_url
-
                 ? `
-
                   <img
                     src="${esc(x.image_url)}"
                     alt="${esc(x.title)}"
                     loading="lazy"
                   >
-
                 `
-
                 : ''
             }
-
 
             <div>
 
               <small>
-
                 ${esc(x.car_make || '')}
-
                 ${esc(x.car_model || '')}
-
               </small>
-
 
               <h3>
                 ${esc(x.title)}
               </h3>
 
-
               <p>
-
                 ${esc(
                   x.description ||
                   x.service ||
                   ''
                 )}
-
               </p>
 
             </div>
 
           </article>
-
         `).join('');
-
     } else {
-
       projectsBox.innerHTML = `
-
         <div class="empty">
           Lucrările vor apărea aici în curând.
         </div>
-
       `;
-
     }
-
   }
 
 
-  /* ======================================================
-     PRODUSE
-  ====================================================== */
+  /* PRODUSE */
 
   const productsBox =
     document.getElementById(
@@ -1676,57 +1620,40 @@ async function loadPublic() {
 
 
   if (productsBox) {
-
     if (productsResult.error) {
-
       console.error(
         'Eroare produse:',
         productsResult.error
       );
 
-
       productsBox.innerHTML = `
-
         <div class="empty">
           Nu am putut încărca produsele.
         </div>
-
       `;
 
-
     } else if (products?.length) {
-
       allProducts =
         products;
-
 
       filteredProducts =
         [...allProducts];
 
-
       visibleProducts =
         PRODUCTS_PER_PAGE;
 
-
       buildProductCategories();
-
 
       renderProducts();
 
-
     } else {
-
       allProducts = [];
-
       filteredProducts = [];
 
-
       productsBox.innerHTML = `
-
         <div class="empty">
           Nu există produse momentan.
         </div>
-
       `;
 
 
@@ -1737,20 +1664,15 @@ async function loadPublic() {
 
 
       if (loadMoreWrap) {
-
         loadMoreWrap.classList.add(
           'hidden'
         );
-
       }
-
     }
-
   }
 
 
   updateCartUI();
-
 }
 
 
@@ -1759,12 +1681,10 @@ async function loadPublic() {
 ======================================================== */
 
 function whatsapp(message) {
-
   return (
     `https://wa.me/${WA}?text=` +
     encodeURIComponent(message)
   );
-
 }
 
 
@@ -1788,11 +1708,9 @@ document.addEventListener(
 
 
     if (menu) {
-
       menu.classList.add(
         'hidden'
       );
-
     }
 
 
@@ -1803,18 +1721,15 @@ document.addEventListener(
 
 
     if (cartOverlay) {
-
       cartOverlay.classList.add(
         'hidden'
       );
-
     }
 
 
     document.body.classList.remove(
       'no-scroll'
     );
-
   }
 );
 
@@ -1827,27 +1742,19 @@ document.addEventListener(
   'DOMContentLoaded',
   async () => {
 
-    /* =========================
-       SITE PUBLIC
-    ========================= */
-
     if (
       document.getElementById(
         'services'
       )
     ) {
-
       await loadPublic();
-
     }
 
 
     updateCartUI();
 
 
-    /* =========================
-       FORMULAR OFERTĂ
-    ========================= */
+    /* FORMULAR OFERTĂ */
 
     const f =
       document.getElementById(
@@ -1856,7 +1763,6 @@ document.addEventListener(
 
 
     if (f) {
-
       f.addEventListener(
         'submit',
         async event => {
@@ -1869,7 +1775,6 @@ document.addEventListener(
 
 
           const q = {
-
             name:
               fd.get('nume'),
 
@@ -1893,13 +1798,10 @@ document.addEventListener(
               fd.get('serviciu'),
 
             message:
-
               `Motorizare: ${
                 fd.get('motor') || '-'
               }\n` +
-
               `${fd.get('detalii') || ''}`
-
           };
 
 
@@ -1923,7 +1825,6 @@ document.addEventListener(
 
 
           if (error) {
-
             console.error(
               'Eroare cerere ofertă:',
               error
@@ -1931,68 +1832,48 @@ document.addEventListener(
 
 
             if (msg) {
-
               msg.textContent =
                 'Nu am putut trimite cererea. Încearcă WhatsApp.';
 
               msg.className =
                 'error';
-
             }
 
 
             if (formWhatsApp) {
-
               formWhatsApp.href =
                 whatsapp(
-
                   `Salut! Vreau o ofertă pentru ` +
-
                   `${q.car_make} ${q.car_model}. ` +
-
                   `${q.service}. ${q.message}`
-
                 );
-
             }
 
-
             return;
-
           }
 
 
           if (msg) {
-
             msg.textContent =
               'Cererea a fost trimisă! Te vom contacta cât mai repede.';
 
             msg.className =
               'success';
-
           }
 
 
           if (formWhatsApp) {
-
             formWhatsApp.href =
               whatsapp(
-
                 `Salut! Am trimis o cerere pe site pentru ` +
-
                 `${q.car_make} ${q.car_model}.`
-
               );
-
           }
 
 
           f.reset();
-
         }
       );
-
     }
-
   }
 );
