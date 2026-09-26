@@ -790,6 +790,45 @@
 
 
 
+<!-- =====================================================
+     DETALII PRODUS
+===================================================== -->
+
+<div
+  id="productModal"
+  class="product-modal-overlay hidden"
+  onclick="closeProductFromOverlay(event)"
+>
+
+  <div
+    id="productModalBox"
+    class="product-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="productModalTitle"
+  >
+
+    <button
+      class="product-modal-close"
+      type="button"
+      onclick="closeProductModal()"
+      aria-label="Închide produsul"
+    >
+      ×
+    </button>
+
+
+    <div
+      id="productModalContent"
+      class="product-modal-content"
+    ></div>
+
+  </div>
+
+</div>
+
+
+
 <!-- =========================
      FOOTER
 ========================= -->
@@ -818,11 +857,11 @@
 <!-- =====================================================
      JAVASCRIPT
 
-     ?v=20260926-2 forțează browserul să încarce
-     versiunea nouă de app.js și evită cache-ul vechi.
+     Versiunea din URL forțează browserul să încarce
+     app.js nou și evită cache-ul vechi.
 ===================================================== -->
 
-<script src="app.js?v=20260926-2"></script>
+<script src="app.js?v=20260926-3"></script>
 
 
 </body>
