@@ -435,6 +435,13 @@ function addToCart(product) {
 
   saveCart();
 
+  /*
+    Dacă produsul este deschis în fereastra mare,
+    îl închidem înainte să deschidem coșul.
+  */
+
+  closeProductModal();
+
   const overlay =
     document.getElementById('cartOverlay');
 
@@ -791,9 +798,7 @@ function updatePaymentMethod() {
         'PLASEAZĂ COMANDA →';
     }
   }
-}
-
-
+} 
 /* ========================================================
    PLASEAZĂ COMANDA
 ======================================================== */
@@ -1274,6 +1279,353 @@ async function placeOrder() {
 
 
 /* ========================================================
+   DETALII PRODUS - DESCHIDERE
+======================================================== */
+
+function openProductModal(productId) {
+  const product =
+    allProducts.find(
+      item =>
+        String(item.id) ===
+        String(productId)
+    );
+
+  if (!product) {
+    console.error(
+      'Produsul nu a fost găsit:',
+      productId
+    );
+
+    return;
+  }
+
+  const overlay =
+    document.getElementById(
+      'productModal'
+    );
+
+  const content =
+    document.getElementById(
+      'productModalContent'
+    );
+
+  if (!overlay || !content) {
+    return;
+  }
+
+  const price =
+    product.price != null &&
+    product.price !== ''
+      ? Number(product.price)
+      : null;
+
+  const hasPrice =
+    price != null &&
+    Number.isFinite(price);
+
+  const productForCart = {
+    id:
+      product.id,
+
+    name:
+      product.name,
+
+    price:
+      price
+  };
+
+
+  /* =========================
+     WHATSAPP PRODUS
+  ========================= */
+
+  const whatsappText =
+    `Salut! Sunt interesat de produsul:\n\n` +
+    `${product.name || 'Produs'}\n` +
+    `Categorie: ${product.category || '-'}\n\n` +
+    `Aș dori mai multe informații și prețul.`;
+
+  const whatsappUrl =
+    whatsapp(
+      whatsappText
+    );
+
+
+  /* =========================
+     IMAGINE
+  ========================= */
+
+  const imageHtml =
+    product.image_url
+      ? `
+        <img
+          class="product-detail-image"
+          src="${esc(product.image_url)}"
+          alt="${esc(product.name || 'Produs')}"
+        >
+      `
+      : `
+        <div class="product-detail-no-image">
+          Imagine indisponibilă
+        </div>
+      `;
+
+
+  /* =========================
+     PREȚ
+  ========================= */
+
+  const priceHtml =
+    hasPrice
+      ? `
+        <div class="product-detail-price">
+          ${price.toFixed(2)} lei
+        </div>
+      `
+      : `
+        <div class="product-detail-price ask-price">
+          Cere preț
+        </div>
+      `;
+
+
+  /* =========================
+     BUTON
+  ========================= */
+
+  const actionHtml =
+    hasPrice
+      ? `
+        <button
+          class="btn primary product-detail-add-cart"
+          type="button"
+          id="productModalAddCart"
+        >
+          🛒 ADAUGĂ ÎN COȘ
+        </button>
+      `
+      : `
+        <a
+          class="btn product-detail-whatsapp"
+          href="${esc(whatsappUrl)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          💬 CERE PREȚ PE WHATSAPP
+        </a>
+      `;
+
+
+  /* =========================
+     CONȚINUT
+  ========================= */
+
+  content.innerHTML = `
+
+    <div class="product-detail-image-wrap">
+
+      ${imageHtml}
+
+    </div>
+
+
+    <div class="product-detail-info">
+
+      <div class="product-detail-category">
+        ${esc(
+          product.category ||
+          'Produs'
+        )}
+      </div>
+
+
+      <h2
+        id="productModalTitle"
+        class="product-detail-title"
+      >
+        ${esc(
+          product.name ||
+          'Produs'
+        )}
+      </h2>
+
+
+      ${priceHtml}
+
+
+      <div class="product-detail-description-title">
+        DESCRIERE
+      </div>
+
+
+      <p class="product-detail-description">
+        ${
+          product.description
+            ? esc(product.description)
+            : 'Nu există descriere pentru acest produs.'
+        }
+      </p>
+
+
+      <div class="product-detail-actions">
+
+        ${actionHtml}
+
+      </div>
+
+
+      ${
+        hasPrice
+          ? `
+            <p class="product-detail-note">
+              Transport 25 lei • Gratuit pentru comenzi de minimum 500 lei
+            </p>
+          `
+          : `
+            <p class="product-detail-note">
+              Contactează-ne pe WhatsApp pentru preț și disponibilitate.
+            </p>
+          `
+      }
+
+    </div>
+
+  `;
+
+
+  /*
+    Nu folosim onclick cu JSON în HTML pentru butonul
+    de cumpărare. Îl conectăm direct aici.
+  */
+
+  if (hasPrice) {
+    const addButton =
+      document.getElementById(
+        'productModalAddCart'
+      );
+
+    if (addButton) {
+      addButton.addEventListener(
+        'click',
+        event => {
+          event.stopPropagation();
+
+          addToCart(
+            productForCart
+          );
+        }
+      );
+    }
+  }
+
+
+  /* =========================
+     DESCHIDERE MODAL
+  ========================= */
+
+  overlay.classList.remove(
+    'hidden'
+  );
+
+  document.body.classList.add(
+    'no-scroll'
+  );
+
+
+  /*
+    Pe telefon / desktop începem de sus
+    de fiecare dată când deschidem produsul.
+  */
+
+  const modalBox =
+    document.getElementById(
+      'productModalBox'
+    );
+
+  if (modalBox) {
+    modalBox.scrollTop = 0;
+  }
+}
+
+
+/* ========================================================
+   DETALII PRODUS - ÎNCHIDERE
+======================================================== */
+
+function closeProductModal() {
+  const overlay =
+    document.getElementById(
+      'productModal'
+    );
+
+  if (!overlay) {
+    return;
+  }
+
+  overlay.classList.add(
+    'hidden'
+  );
+
+
+  /*
+    Scoatem no-scroll doar dacă nu este deschis
+    și coșul sau meniul mobil.
+  */
+
+  const cartOverlay =
+    document.getElementById(
+      'cartOverlay'
+    );
+
+  const mobileMenu =
+    document.getElementById(
+      'mobileMenu'
+    );
+
+  const cartIsOpen =
+    cartOverlay &&
+    !cartOverlay.classList.contains(
+      'hidden'
+    );
+
+  const menuIsOpen =
+    mobileMenu &&
+    !mobileMenu.classList.contains(
+      'hidden'
+    );
+
+  if (
+    !cartIsOpen &&
+    !menuIsOpen
+  ) {
+    document.body.classList.remove(
+      'no-scroll'
+    );
+  }
+}
+
+
+/* ========================================================
+   DETALII PRODUS - CLICK PE FUNDAL
+======================================================== */
+
+function closeProductFromOverlay(event) {
+  const overlay =
+    document.getElementById(
+      'productModal'
+    );
+
+  if (!overlay) {
+    return;
+  }
+
+  if (event.target === overlay) {
+    closeProductModal();
+  }
+}
+
+
+/* ========================================================
    CATEGORII PRODUSE
 ======================================================== */
 
@@ -1380,7 +1732,9 @@ function selectCategory(
   }
 
   filterProducts();
-} 
+}
+
+
 /* ========================================================
    FILTRARE PRODUSE
 ======================================================== */
@@ -1441,9 +1795,14 @@ function filterProducts() {
 
 function createProductCard(x) {
   const price =
-    x.price != null
+    x.price != null &&
+    x.price !== ''
       ? Number(x.price)
       : null;
+
+  const hasPrice =
+    price != null &&
+    Number.isFinite(price);
 
   const productForCart = {
     id:
@@ -1458,7 +1817,21 @@ function createProductCard(x) {
 
   return `
 
-    <article class="product-card">
+    <article
+      class="product-card"
+      role="button"
+      tabindex="0"
+      onclick="openProductModal('${esc(x.id)}')"
+      onkeydown="
+        if (
+          event.key === 'Enter' ||
+          event.key === ' '
+        ) {
+          event.preventDefault();
+          openProductModal('${esc(x.id)}');
+        }
+      "
+    >
 
       ${
         x.image_url
@@ -1488,28 +1861,40 @@ function createProductCard(x) {
 
         <strong>
           ${
-            price != null &&
-            Number.isFinite(price)
+            hasPrice
               ? `${price.toFixed(2)} lei`
               : 'Cere preț'
           }
         </strong>
 
         ${
-          price != null &&
-          Number.isFinite(price)
+          hasPrice
             ? `
               <button
                 class="btn primary add-cart"
                 type="button"
-                onclick='addToCart(${JSON.stringify(
-                  productForCart
-                )})'
+                onclick='
+                  event.stopPropagation();
+                  addToCart(${JSON.stringify(
+                    productForCart
+                  )});
+                '
               >
                 🛒 ADAUGĂ ÎN COȘ
               </button>
             `
-            : ''
+            : `
+              <button
+                class="btn outline add-cart"
+                type="button"
+                onclick="
+                  event.stopPropagation();
+                  openProductModal('${esc(x.id)}');
+                "
+              >
+                VEZI PRODUSUL →
+              </button>
+            `
         }
 
       </div>
@@ -1605,9 +1990,7 @@ function loadMoreProducts() {
     PRODUCTS_PER_PAGE;
 
   renderProducts();
-}
-
-
+} 
 /* ========================================================
    ÎNCĂRCARE SITE
 ======================================================== */
@@ -1667,6 +2050,11 @@ async function loadPublic() {
           })
         );
 
+
+  /* ======================================================
+     SERVICII
+  ====================================================== */
+
   const servicesBox =
     document.getElementById(
       'services'
@@ -1693,6 +2081,11 @@ async function loadPublic() {
       `).join('');
   }
 
+
+  /* ======================================================
+     SELECT SERVICII
+  ====================================================== */
+
   const serviceSelect =
     document.getElementById(
       'serviceSelect'
@@ -1707,6 +2100,11 @@ async function loadPublic() {
         </option>
       `).join('');
   }
+
+
+  /* ======================================================
+     LUCRĂRI
+  ====================================================== */
 
   const projectsBox =
     document.getElementById(
@@ -1754,6 +2152,7 @@ async function loadPublic() {
 
           </article>
         `).join('');
+
     } else {
       projectsBox.innerHTML = `
         <div class="empty">
@@ -1763,12 +2162,18 @@ async function loadPublic() {
     }
   }
 
+
+  /* ======================================================
+     PRODUSE
+  ====================================================== */
+
   const productsBox =
     document.getElementById(
       'products'
     );
 
   if (productsBox) {
+
     if (productsResult.error) {
       console.error(
         'Eroare produse:',
@@ -1782,6 +2187,7 @@ async function loadPublic() {
       `;
 
     } else if (products?.length) {
+
       allProducts =
         products;
 
@@ -1796,6 +2202,7 @@ async function loadPublic() {
       renderProducts();
 
     } else {
+
       allProducts = [];
       filteredProducts = [];
 
@@ -1835,7 +2242,7 @@ function whatsapp(message) {
 
 
 /* ========================================================
-   ESC - ÎNCHIDE MENIU / COȘ
+   ESC - ÎNCHIDE MENIU / COȘ / PRODUS
 ======================================================== */
 
 document.addEventListener(
@@ -1845,6 +2252,9 @@ document.addEventListener(
     if (event.key !== 'Escape') {
       return;
     }
+
+
+    /* MENIU */
 
     const menu =
       document.getElementById(
@@ -1857,6 +2267,9 @@ document.addEventListener(
       );
     }
 
+
+    /* COȘ */
+
     const cartOverlay =
       document.getElementById(
         'cartOverlay'
@@ -1867,6 +2280,23 @@ document.addEventListener(
         'hidden'
       );
     }
+
+
+    /* PRODUS */
+
+    const productModal =
+      document.getElementById(
+        'productModal'
+      );
+
+    if (productModal) {
+      productModal.classList.add(
+        'hidden'
+      );
+    }
+
+
+    /* DEBLOCĂM PAGINA */
 
     document.body.classList.remove(
       'no-scroll'
@@ -1882,6 +2312,10 @@ document.addEventListener(
 document.addEventListener(
   'DOMContentLoaded',
   async () => {
+
+    /* ====================================================
+       ÎNCĂRCARE SITE
+    ==================================================== */
 
     if (
       document.getElementById(
