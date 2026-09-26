@@ -304,10 +304,6 @@ async function placeOrder(){
 
   const total=cartTotal();
 
-  /*
-    Generăm noi ID-ul comenzii.
-    Astfel nu mai avem nevoie de SELECT după INSERT.
-  */
   const orderId=crypto.randomUUID();
 
   const {error:orderError}=await sb
@@ -376,6 +372,68 @@ async function placeOrder(){
     message.className='error';
 
     return;
+  }
+
+  /*
+    NOTIFICARE EMAIL
+
+    Comanda și produsele sunt deja salvate.
+    Acum apelăm Edge Function-ul order-notification.
+
+    Dacă emailul nu se poate trimite,
+    comanda NU este anulată și checkout-ul continuă.
+  */
+
+  try{
+
+    const notificationResult=
+      await sb.functions.invoke(
+        'order-notification',
+        {
+          body:{
+
+            order_id:orderId,
+
+            customer_name:name,
+
+            customer_phone:phone,
+
+            customer_address:address,
+
+            total:total.toFixed(2),
+
+            notes:notes,
+
+            items:items.map(item=>({
+
+              product_name:item.product_name,
+
+              quantity:item.quantity,
+
+              price:item.price
+
+            }))
+
+          }
+        }
+      );
+
+    if(notificationResult.error){
+
+      console.error(
+        'Comanda a fost salvată, dar notificarea email nu a fost trimisă:',
+        notificationResult.error
+      );
+
+    }
+
+  }catch(notificationError){
+
+    console.error(
+      'Comanda a fost salvată, dar notificarea email a eșuat:',
+      notificationError
+    );
+
   }
 
   message.textContent=
