@@ -3352,7 +3352,50 @@ th {
   flex-direction: column;
   justify-content: center;
 }
+/* ===== FIX FINAL POZA PRODUS ===== */
 
+.product-detail-image-wrap {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 520px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  display: block !important;
+  background: #0b1118 !important;
+}
+
+.product-detail-image-wrap .product-detail-image {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 520px !important;
+  max-height: none !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  display: block !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+
+/* TELEFON */
+
+@media (max-width: 768px) {
+
+  .product-detail-image-wrap {
+    height: 350px !important;
+    min-height: 350px !important;
+  }
+
+  .product-detail-image-wrap .product-detail-image {
+    height: 350px !important;
+    min-height: 350px !important;
+    object-fit: cover !important;
+  }
+
+}
 
 /* =========================================================
    TELEFON
