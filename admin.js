@@ -1,66 +1,140 @@
 const tables = {
   products: {
     label: 'Piese auto',
-    fields: ['name', 'description', 'price', 'category', 'image_url', 'available']
+    fields: [
+      'name',
+      'description',
+      'price',
+      'category',
+      'image_url',
+      'available'
+    ]
   },
+
   services: {
     label: 'Servicii',
-    fields: ['name', 'description', 'price_from', 'image_url', 'active']
+    fields: [
+      'name',
+      'description',
+      'price_from',
+      'image_url',
+      'active'
+    ]
   },
+
   projects: {
     label: 'Lucrări',
-    fields: ['title', 'description', 'car_make', 'car_model', 'service', 'image_url']
+    fields: [
+      'title',
+      'description',
+      'car_make',
+      'car_model',
+      'service',
+      'image_url'
+    ]
   }
 };
+
 
 const IMAGE_BUCKET = 'imagini produse';
 
 let current = 'dash';
 
-function aesc(s) {
-  if (s === undefined || s === null) return '';
 
-  return String(s).replace(/[&<>'"]/g, function(c) {
-    return {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      "'": '&#39;',
-      '"': '&quot;'
-    }[c];
-  });
+/* ========================================================
+   ESCAPE HTML
+======================================================== */
+
+function aesc(s) {
+  if (
+    s === undefined ||
+    s === null
+  ) {
+    return '';
+  }
+
+  return String(s).replace(
+    /[&<>'"]/g,
+    function(c) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[c];
+    }
+  );
 }
 
+
+/* ========================================================
+   VERIFICARE LOGIN
+======================================================== */
+
 async function requireUser() {
-  const result = await sb.auth.getSession();
-  const session = result.data.session;
+  const result =
+    await sb.auth.getSession();
+
+  const session =
+    result.data.session;
 
   if (!session) {
     showLogin();
     return null;
   }
 
-  document.getElementById('adminUser').textContent =
-    session.user.email || 'Administrator';
+  const adminUser =
+    document.getElementById(
+      'adminUser'
+    );
+
+  if (adminUser) {
+    adminUser.textContent =
+      session.user.email ||
+      'Administrator';
+  }
 
   return session;
 }
 
+
+/* ========================================================
+   LOGIN
+======================================================== */
+
 function showLogin() {
   document.body.innerHTML = `
     <div class="login">
+
       <img src="logo.jpg">
 
       <div class="login-box">
-        <h1>ADMIN KXTUNINGSHOP</h1>
 
-        <p>Intră în panoul de administrare.</p>
+        <h1>
+          ADMIN KXTUNINGSHOP
+        </h1>
 
-        <input id="email" type="email" placeholder="Email">
+        <p>
+          Intră în panoul de administrare.
+        </p>
 
-        <input id="password" type="password" placeholder="Parolă">
+        <input
+          id="email"
+          type="email"
+          placeholder="Email"
+        >
 
-        <button class="btn primary" id="loginBtn">
+        <input
+          id="password"
+          type="password"
+          placeholder="Parolă"
+        >
+
+        <button
+          class="btn primary"
+          id="loginBtn"
+        >
           INTRĂ ÎN PANOU
         </button>
 
@@ -69,38 +143,68 @@ function showLogin() {
         <a href="index.html">
           ← Înapoi la site
         </a>
+
       </div>
+
     </div>
   `;
 
-  document.getElementById('loginBtn').onclick = async function() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+  document
+    .getElementById('loginBtn')
+    .onclick =
+    async function() {
 
-    const result = await sb.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+      const email =
+        document
+          .getElementById('email')
+          .value;
 
-    document.getElementById('loginMsg').textContent =
-      result.error ? result.error.message : '';
+      const password =
+        document
+          .getElementById('password')
+          .value;
 
-    if (!result.error) {
-      location.reload();
-    }
-  };
+      const result =
+        await sb.auth
+          .signInWithPassword({
+            email: email,
+            password: password
+          });
+
+      document
+        .getElementById('loginMsg')
+        .textContent =
+        result.error
+          ? result.error.message
+          : '';
+
+      if (!result.error) {
+        location.reload();
+      }
+    };
 }
 
+
+/* ========================================================
+   COUNT
+======================================================== */
+
 async function count(table) {
-  const result = await sb
-    .from(table)
-    .select('*', {
-      count: 'exact',
-      head: true
-    });
+  const result =
+    await sb
+      .from(table)
+      .select('*', {
+        count: 'exact',
+        head: true
+      });
 
   return result.count || 0;
 }
+
+
+/* ========================================================
+   UPLOAD IMAGINE PRODUS
+======================================================== */
 
 async function uploadProductImage(file) {
   if (!file) {
@@ -108,128 +212,202 @@ async function uploadProductImage(file) {
   }
 
   const extension =
-    file.name && file.name.indexOf('.') !== -1
-      ? file.name.split('.').pop().toLowerCase()
+    file.name &&
+    file.name.indexOf('.') !== -1
+      ? file.name
+          .split('.')
+          .pop()
+          .toLowerCase()
       : 'jpg';
 
-  const safeExtension = extension.replace(/[^a-z0-9]/g, '') || 'jpg';
+  const safeExtension =
+    extension.replace(
+      /[^a-z0-9]/g,
+      ''
+    ) || 'jpg';
 
   const fileName =
     'products/' +
     Date.now() +
     '-' +
-    Math.random().toString(36).substring(2, 10) +
+    Math.random()
+      .toString(36)
+      .substring(2, 10) +
     '.' +
     safeExtension;
 
-  const uploadResult = await sb.storage
-    .from(IMAGE_BUCKET)
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
+  const uploadResult =
+    await sb.storage
+      .from(IMAGE_BUCKET)
+      .upload(
+        fileName,
+        file,
+        {
+          cacheControl: '3600',
+          upsert: false
+        }
+      );
 
   if (uploadResult.error) {
     throw uploadResult.error;
   }
 
-  const publicResult = sb.storage
-    .from(IMAGE_BUCKET)
-    .getPublicUrl(fileName);
+  const publicResult =
+    sb.storage
+      .from(IMAGE_BUCKET)
+      .getPublicUrl(fileName);
 
   if (
     !publicResult ||
     !publicResult.data ||
     !publicResult.data.publicUrl
   ) {
-    throw new Error('Nu s-a putut obține adresa imaginii.');
+    throw new Error(
+      'Nu s-a putut obține adresa imaginii.'
+    );
   }
 
   return publicResult.data.publicUrl;
 }
 
+
+/* ========================================================
+   DASHBOARD
+======================================================== */
+
 async function renderDash() {
-  const p = await count('products');
-  const s = await count('services');
-  const pr = await count('projects');
-  const q = await count('quote_requests');
-  const o = await count('orders');
+  const p =
+    await count('products');
 
-  document.getElementById('dash').innerHTML = `
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">KXTUNINGSHOP</div>
-        <h1>Panou principal</h1>
-      </div>
-    </div>
+  const s =
+    await count('services');
 
-    <div class="stats">
-      <div>
-        <b>${p}</b>
-        <span>Produse</span>
-      </div>
+  const pr =
+    await count('projects');
 
-      <div>
-        <b>${s}</b>
-        <span>Servicii</span>
-      </div>
+  const q =
+    await count('quote_requests');
 
-      <div>
-        <b>${pr}</b>
-        <span>Lucrări</span>
-      </div>
+  const o =
+    await count('orders');
 
-      <div>
-        <b>${q}</b>
-        <span>Cereri ofertă</span>
+  document
+    .getElementById('dash')
+    .innerHTML = `
+
+      <div class="page-head">
+
+        <div>
+          <div class="eyebrow">
+            KXTUNINGSHOP
+          </div>
+
+          <h1>
+            Panou principal
+          </h1>
+        </div>
+
       </div>
 
-      <div>
-        <b>${o}</b>
-        <span>Comenzi</span>
+
+      <div class="stats">
+
+        <div>
+          <b>${p}</b>
+          <span>Produse</span>
+        </div>
+
+        <div>
+          <b>${s}</b>
+          <span>Servicii</span>
+        </div>
+
+        <div>
+          <b>${pr}</b>
+          <span>Lucrări</span>
+        </div>
+
+        <div>
+          <b>${q}</b>
+          <span>Cereri ofertă</span>
+        </div>
+
+        <div>
+          <b>${o}</b>
+          <span>Comenzi</span>
+        </div>
+
       </div>
-    </div>
 
-    <div class="panel">
-      <h2>Acțiuni rapide</h2>
 
-      <div class="quick">
-        <button onclick="openTab('products')">
-          + Adaugă produs
-        </button>
+      <div class="panel">
 
-        <button onclick="openTab('services')">
-          + Adaugă serviciu
-        </button>
+        <h2>
+          Acțiuni rapide
+        </h2>
 
-        <button onclick="openTab('projects')">
-          + Adaugă lucrare
-        </button>
+        <div class="quick">
 
-        <button onclick="openTab('quotes')">
-          Vezi cereri
-        </button>
+          <button
+            onclick="openTab('products')"
+          >
+            + Adaugă produs
+          </button>
 
-        <button onclick="openTab('orders')">
-          🛒 Vezi comenzi
-        </button>
+          <button
+            onclick="openTab('services')"
+          >
+            + Adaugă serviciu
+          </button>
+
+          <button
+            onclick="openTab('projects')"
+          >
+            + Adaugă lucrare
+          </button>
+
+          <button
+            onclick="openTab('quotes')"
+          >
+            Vezi cereri
+          </button>
+
+          <button
+            onclick="openTab('orders')"
+          >
+            🛒 Vezi comenzi
+          </button>
+
+        </div>
+
       </div>
-    </div>
   `;
 }
 
-async function renderTable(tab) {
-  const cfg = tables[tab];
 
-  const result = await sb
-    .from(tab)
-    .select('*')
-    .order('created_at', {
-      ascending: false
-    });
+/* ========================================================
+   TABEL PRODUSE / SERVICII / LUCRĂRI
+======================================================== */
+
+async function renderTable(tab) {
+  const cfg =
+    tables[tab];
+
+  const result =
+    await sb
+      .from(tab)
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
 
   if (result.error) {
-    document.getElementById(tab).innerHTML =
+    document
+      .getElementById(tab)
+      .innerHTML =
       '<p class="error">' +
       aesc(result.error.message) +
       '</p>';
@@ -237,189 +415,416 @@ async function renderTable(tab) {
     return;
   }
 
-  const data = result.data || [];
+  const data =
+    result.data || [];
 
   let rows = '';
 
-  data.forEach(function(x) {
-    rows += `
-      <tr>
-        <td>
-          <b>${aesc(x.name || x.title)}</b>
-        </td>
+  data.forEach(
+    function(x) {
 
-        <td>
-          ${aesc(x.description || x.service || '')}
-        </td>
+      const itemName =
+        x.name ||
+        x.title ||
+        'Fără nume';
 
-        <td>
-          ${
-            x.price != null
-              ? aesc(x.price) + ' lei'
-              : x.price_from != null
-                ? 'de ' + aesc(x.price_from) + ' lei'
+      let priceText = '';
+
+      if (x.price != null) {
+        priceText =
+          aesc(x.price) +
+          ' lei';
+      } else if (
+        x.price_from != null
+      ) {
+        priceText =
+          'de ' +
+          aesc(x.price_from) +
+          ' lei';
+      } else if (
+        tab === 'products'
+      ) {
+        priceText =
+          'Cere preț';
+      }
+
+
+      /* ===============================
+         CARD / RÂND PRODUS
+      =============================== */
+
+      rows += `
+
+        <tr>
+
+          <td>
+
+            ${
+              tab === 'products' &&
+              x.image_url
+                ? `
+                  <img
+                    src="${aesc(x.image_url)}"
+                    alt="${aesc(itemName)}"
+                    style="
+                      width:70px;
+                      height:70px;
+                      object-fit:cover;
+                      border-radius:8px;
+                      display:block;
+                      margin-bottom:8px;
+                    "
+                  >
+                `
                 : ''
-          }
-        </td>
+            }
 
-        <td>
-          <button onclick='editItem(${JSON.stringify(tab)}, ${JSON.stringify(x)})'>
-            Editează
-          </button>
+            <b>
+              ${aesc(itemName)}
+            </b>
 
-          <button
-            class="danger"
-            onclick='deleteItem(${JSON.stringify(tab)}, ${JSON.stringify(x.id)})'>
-            Șterge
-          </button>
+            ${
+              tab === 'products' &&
+              x.category
+                ? `
+                  <br>
+                  <small>
+                    ${aesc(x.category)}
+                  </small>
+                `
+                : ''
+            }
+
+          </td>
+
+
+          <td>
+            ${aesc(
+              x.description ||
+              x.service ||
+              ''
+            )}
+          </td>
+
+
+          <td>
+            <b>
+              ${priceText}
+            </b>
+          </td>
+
+
+          <td
+            style="
+              min-width:190px;
+              white-space:nowrap;
+            "
+          >
+
+            <button
+              type="button"
+              class="btn primary"
+              style="
+                margin:3px;
+                padding:9px 12px;
+                display:inline-block;
+              "
+              onclick='editItem(
+                ${JSON.stringify(tab)},
+                ${JSON.stringify(x)}
+              )'
+            >
+              ✏️ EDITEAZĂ
+            </button>
+
+
+            <button
+              type="button"
+              class="danger"
+              style="
+                margin:3px;
+                padding:9px 12px;
+                display:inline-block;
+              "
+              onclick='deleteItem(
+                ${JSON.stringify(tab)},
+                ${JSON.stringify(x.id)}
+              )'
+            >
+              🗑️ ȘTERGE
+            </button>
+
+          </td>
+
+        </tr>
+
+      `;
+    }
+  );
+
+
+  if (!rows) {
+    rows = `
+      <tr>
+        <td colspan="4">
+          Nu există elemente.
         </td>
       </tr>
     `;
-  });
-
-  if (!rows) {
-    rows =
-      '<tr>' +
-      '<td colspan="4">Nu există elemente.</td>' +
-      '</tr>';
   }
 
-  document.getElementById(tab).innerHTML = `
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">ADMIN</div>
-        <h1>${cfg.label}</h1>
+
+  document
+    .getElementById(tab)
+    .innerHTML = `
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            ADMIN
+          </div>
+
+          <h1>
+            ${cfg.label}
+          </h1>
+
+        </div>
+
+
+        <button
+          class="btn primary"
+          onclick='newItem("${tab}")'
+        >
+          + ADAUGĂ
+        </button>
+
       </div>
 
-      <button
-        class="btn primary"
-        onclick='newItem("${tab}")'>
-        + ADAUGĂ
-      </button>
-    </div>
 
-    <div class="panel">
-      <table>
-        <thead>
-          <tr>
-            <th>Nume</th>
-            <th>Descriere</th>
-            <th>Preț</th>
-            <th></th>
-          </tr>
-        </thead>
+      <div
+        class="panel"
+        style="
+          overflow-x:auto;
+          -webkit-overflow-scrolling:touch;
+        "
+      >
 
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    </div>
+        <table
+          style="
+            width:100%;
+            min-width:750px;
+          "
+        >
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Nume
+              </th>
+
+              <th>
+                Descriere
+              </th>
+
+              <th>
+                Preț
+              </th>
+
+              <th>
+                ACȚIUNI
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+      </div>
   `;
 }
+
+
+/* ========================================================
+   CERERI OFERTĂ
+======================================================== */
 
 async function renderQuotes() {
-  const result = await sb
-    .from('quote_requests')
-    .select('*')
-    .order('created_at', {
-      ascending: false
-    });
+  const result =
+    await sb
+      .from('quote_requests')
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
 
-  const data = result.data || [];
+  const data =
+    result.data || [];
 
   let rows = '';
 
-  data.forEach(function(x) {
-    rows += `
+  data.forEach(
+    function(x) {
+
+      rows += `
+
+        <tr>
+
+          <td>
+            <b>
+              ${aesc(x.name)}
+            </b>
+          </td>
+
+          <td>
+            ${aesc(x.car_make)}
+            ${aesc(x.car_model)}
+            ${x.car_year || ''}
+          </td>
+
+          <td>
+            ${aesc(x.service)}
+          </td>
+
+          <td>
+            <a
+              href="tel:${aesc(x.phone)}"
+            >
+              ${aesc(x.phone)}
+            </a>
+          </td>
+
+          <td>
+            ${
+              x.created_at
+                ? new Date(
+                    x.created_at
+                  ).toLocaleString(
+                    'ro-RO'
+                  )
+                : ''
+            }
+          </td>
+
+        </tr>
+
+      `;
+    }
+  );
+
+
+  if (result.error) {
+    rows = `
       <tr>
-        <td>
-          <b>${aesc(x.name)}</b>
-        </td>
-
-        <td>
-          ${aesc(x.car_make)}
-          ${aesc(x.car_model)}
-          ${x.car_year || ''}
-        </td>
-
-        <td>
-          ${aesc(x.service)}
-        </td>
-
-        <td>
-          <a href="tel:${aesc(x.phone)}">
-            ${aesc(x.phone)}
-          </a>
-        </td>
-
-        <td>
-          ${
-            x.created_at
-              ? new Date(x.created_at).toLocaleString('ro-RO')
-              : ''
-          }
+        <td colspan="5">
+          ${aesc(
+            result.error.message
+          )}
         </td>
       </tr>
     `;
-  });
-
-  if (result.error) {
-    rows =
-      '<tr>' +
-      '<td colspan="5">' +
-      aesc(result.error.message) +
-      '</td>' +
-      '</tr>';
   }
+
 
   if (!rows) {
-    rows =
-      '<tr>' +
-      '<td colspan="5">Nicio cerere.</td>' +
-      '</tr>';
+    rows = `
+      <tr>
+        <td colspan="5">
+          Nicio cerere.
+        </td>
+      </tr>
+    `;
   }
 
-  document.getElementById('quotes').innerHTML = `
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">ADMIN</div>
-        <h1>Cereri de ofertă</h1>
+
+  document
+    .getElementById('quotes')
+    .innerHTML = `
+
+      <div class="page-head">
+
+        <div>
+          <div class="eyebrow">
+            ADMIN
+          </div>
+
+          <h1>
+            Cereri de ofertă
+          </h1>
+        </div>
+
       </div>
-    </div>
 
-    <div class="panel">
-      <table>
-        <thead>
-          <tr>
-            <th>Client</th>
-            <th>Mașină</th>
-            <th>Serviciu</th>
-            <th>Telefon</th>
-            <th>Data</th>
-          </tr>
-        </thead>
 
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    </div>
+      <div
+        class="panel"
+        style="overflow-x:auto;"
+      >
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Mașină</th>
+              <th>Serviciu</th>
+              <th>Telefon</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+      </div>
   `;
 
-  const badge = document.getElementById('badge');
+
+  const badge =
+    document.getElementById(
+      'badge'
+    );
 
   if (badge) {
-    badge.textContent = data.length;
+    badge.textContent =
+      data.length;
   }
 }
 
-async function updateOrderStatus(id, status) {
-  const result = await sb
-    .from('orders')
-    .update({
-      status: status
-    })
-    .eq('id', id);
+
+/* ========================================================
+   STATUS COMANDĂ
+======================================================== */
+
+async function updateOrderStatus(
+  id,
+  status
+) {
+  const result =
+    await sb
+      .from('orders')
+      .update({
+        status: status
+      })
+      .eq(
+        'id',
+        id
+      );
 
   if (result.error) {
     alert(
@@ -428,46 +833,66 @@ async function updateOrderStatus(id, status) {
     );
 
     renderOrders();
+
     return;
   }
 
   renderOrders();
 }
 
-window.updateOrderStatus = updateOrderStatus;
+window.updateOrderStatus =
+  updateOrderStatus;
+
+
+/* ========================================================
+   ȘTERGE COMANDĂ
+======================================================== */
 
 async function deleteOrder(id) {
-  const confirmDelete = confirm(
-    'Sigur vrei să ștergi această comandă?'
-  );
+  const confirmDelete =
+    confirm(
+      'Sigur vrei să ștergi această comandă?'
+    );
 
   if (!confirmDelete) {
     return;
   }
 
-  const itemsResult = await sb
-    .from('order_items')
-    .delete()
-    .eq('order_id', id);
+
+  const itemsResult =
+    await sb
+      .from('order_items')
+      .delete()
+      .eq(
+        'order_id',
+        id
+      );
 
   if (itemsResult.error) {
     alert(
       'Nu s-au putut șterge produsele comenzii: ' +
       itemsResult.error.message
     );
+
     return;
   }
 
-  const orderResult = await sb
-    .from('orders')
-    .delete()
-    .eq('id', id);
+
+  const orderResult =
+    await sb
+      .from('orders')
+      .delete()
+      .eq(
+        'id',
+        id
+      );
 
   if (orderResult.error) {
     alert(
       'Nu s-a putut șterge comanda: ' +
       orderResult.error.message
     );
+
     return;
   }
 
@@ -475,187 +900,355 @@ async function deleteOrder(id) {
   await renderDash();
 }
 
-window.deleteOrder = deleteOrder;
+window.deleteOrder =
+  deleteOrder;
+
+
+/* ========================================================
+   COMENZI
+======================================================== */
 
 async function renderOrders() {
-  const result = await sb
-    .from('orders')
-    .select('*')
-    .order('created_at', {
-      ascending: false
-    });
+  const result =
+    await sb
+      .from('orders')
+      .select('*')
+      .order(
+        'created_at',
+        {
+          ascending: false
+        }
+      );
 
   if (result.error) {
-    document.getElementById('orders').innerHTML = `
-      <div class="page-head">
-        <div>
-          <div class="eyebrow">ADMIN</div>
-          <h1>Comenzi</h1>
-        </div>
-      </div>
+    document
+      .getElementById('orders')
+      .innerHTML = `
 
-      <div class="panel">
-        <p class="error">
-          ${aesc(result.error.message)}
-        </p>
-      </div>
+        <div class="page-head">
+
+          <div>
+            <div class="eyebrow">
+              ADMIN
+            </div>
+
+            <h1>
+              Comenzi
+            </h1>
+          </div>
+
+        </div>
+
+        <div class="panel">
+
+          <p class="error">
+            ${aesc(
+              result.error.message
+            )}
+          </p>
+
+        </div>
     `;
 
     return;
   }
 
-  const orders = result.data || [];
+
+  const orders =
+    result.data || [];
 
   let rows = '';
 
-  for (let i = 0; i < orders.length; i++) {
-    const order = orders[i];
 
-    const itemResult = await sb
-      .from('order_items')
-      .select('*')
-      .eq('order_id', order.id)
-      .order('created_at', {
-        ascending: true
-      });
+  for (
+    let i = 0;
+    i < orders.length;
+    i++
+  ) {
+    const order =
+      orders[i];
+
+    const itemResult =
+      await sb
+        .from('order_items')
+        .select('*')
+        .eq(
+          'order_id',
+          order.id
+        )
+        .order(
+          'created_at',
+          {
+            ascending: true
+          }
+        );
+
 
     let products = '';
 
     if (itemResult.error) {
-      products = 'Eroare la produsele comenzii';
+      products =
+        'Eroare la produsele comenzii';
+
     } else if (
       itemResult.data &&
       itemResult.data.length
     ) {
-      itemResult.data.forEach(function(item) {
-        products +=
-          aesc(item.product_name) +
-          ' × ' +
-          aesc(item.quantity) +
-          ' — ' +
-          aesc(item.price) +
-          ' lei<br>';
-      });
+
+      itemResult.data.forEach(
+        function(item) {
+
+          products +=
+            aesc(
+              item.product_name
+            ) +
+            ' × ' +
+            aesc(
+              item.quantity
+            ) +
+            ' — ' +
+            aesc(
+              item.price
+            ) +
+            ' lei<br>';
+
+        }
+      );
+
     } else {
-      products = 'Fără produse';
+      products =
+        'Fără produse';
     }
 
-    const status = order.status || 'noua';
+
+    const status =
+      order.status ||
+      'noua';
+
 
     rows += `
+
       <tr>
+
         <td>
+
           <b>
-            ${aesc(order.customer_name || 'Client')}
+            ${aesc(
+              order.customer_name ||
+              'Client'
+            )}
           </b>
 
           <br>
 
-          ${aesc(order.customer_phone || '')}
+          ${aesc(
+            order.customer_phone ||
+            ''
+          )}
+
         </td>
 
+
         <td>
-          ${aesc(order.customer_address || '')}
+          ${aesc(
+            order.customer_address ||
+            ''
+          )}
         </td>
+
 
         <td>
           ${products}
         </td>
 
-        <td>
-          <b>
-            ${aesc(order.total || 0)} lei
-          </b>
-        </td>
 
         <td>
-          <select onchange="updateOrderStatus('${aesc(order.id)}', this.value)">
+
+          <b>
+            ${aesc(
+              order.total || 0
+            )} lei
+          </b>
+
+        </td>
+
+
+        <td>
+
+          <select
+            onchange="
+              updateOrderStatus(
+                '${aesc(order.id)}',
+                this.value
+              )
+            "
+          >
+
             <option
               value="noua"
-              ${status === 'noua' || status === 'nou' ? 'selected' : ''}>
+              ${
+                status === 'noua' ||
+                status === 'nou'
+                  ? 'selected'
+                  : ''
+              }
+            >
               🆕 Nouă
             </option>
 
+
             <option
               value="procesare"
-              ${status === 'procesare' ? 'selected' : ''}>
+              ${
+                status ===
+                'procesare'
+                  ? 'selected'
+                  : ''
+              }
+            >
               🔧 În procesare
             </option>
 
+
             <option
               value="finalizata"
-              ${status === 'finalizata' ? 'selected' : ''}>
+              ${
+                status ===
+                'finalizata'
+                  ? 'selected'
+                  : ''
+              }
+            >
               ✅ Finalizată
             </option>
 
+
             <option
               value="anulata"
-              ${status === 'anulata' ? 'selected' : ''}>
+              ${
+                status ===
+                'anulata'
+                  ? 'selected'
+                  : ''
+              }
+            >
               ❌ Anulată
             </option>
+
           </select>
+
         </td>
 
+
         <td>
+
           ${
             order.created_at
-              ? new Date(order.created_at).toLocaleString('ro-RO')
+              ? new Date(
+                  order.created_at
+                ).toLocaleString(
+                  'ro-RO'
+                )
               : ''
           }
+
         </td>
 
+
         <td>
+
           <button
             class="danger"
-            onclick="deleteOrder('${aesc(order.id)}')">
+            onclick="
+              deleteOrder(
+                '${aesc(order.id)}'
+              )
+            "
+          >
             🗑️ Șterge
           </button>
+
+        </td>
+
+      </tr>
+    `;
+  }
+
+
+  if (!rows) {
+    rows = `
+      <tr>
+        <td colspan="7">
+          Nu există comenzi.
         </td>
       </tr>
     `;
   }
 
-  if (!rows) {
-    rows =
-      '<tr>' +
-      '<td colspan="7">Nu există comenzi.</td>' +
-      '</tr>';
-  }
 
-  document.getElementById('orders').innerHTML = `
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">ADMIN</div>
-        <h1>Comenzi</h1>
+  document
+    .getElementById('orders')
+    .innerHTML = `
+
+      <div class="page-head">
+
+        <div>
+          <div class="eyebrow">
+            ADMIN
+          </div>
+
+          <h1>
+            Comenzi
+          </h1>
+        </div>
+
       </div>
-    </div>
 
-    <div class="panel">
-      <table>
-        <thead>
-          <tr>
-            <th>Client</th>
-            <th>Adresă</th>
-            <th>Produse</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th>Data</th>
-            <th>Acțiuni</th>
-          </tr>
-        </thead>
 
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    </div>
+      <div
+        class="panel"
+        style="overflow-x:auto;"
+      >
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Client</th>
+              <th>Adresă</th>
+              <th>Produse</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th>Acțiuni</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+      </div>
   `;
 }
 
-function modal(html) {
-  const d = document.createElement('div');
 
-  d.className = 'modal-wrap';
+/* ========================================================
+   MODAL ADMIN
+======================================================== */
+
+function modal(html) {
+  const d =
+    document.createElement(
+      'div'
+    );
+
+  d.className =
+    'modal-wrap';
 
   d.innerHTML =
     '<div class="modal">' +
@@ -664,382 +1257,1146 @@ function modal(html) {
     '</div>';
 
   document.body.appendChild(d);
-}
+} 
+/* ========================================================
+   CÂMPURI FORMULAR
+======================================================== */
 
-function createFieldHtml(tab, field, value, editing) {
+function createFieldHtml(
+  tab,
+  field,
+  value,
+  editing
+) {
+
   const checkbox =
-    field === 'available' || field === 'active';
+    field === 'available' ||
+    field === 'active';
+
+
+  /* ======================================================
+     CHECKBOX
+  ====================================================== */
 
   if (checkbox) {
+
     const checked =
       editing
-        ? (value ? 'checked' : '')
+        ? (
+            value
+              ? 'checked'
+              : ''
+          )
         : 'checked';
 
+    const label =
+      field === 'available'
+        ? 'Produs disponibil'
+        : 'Activ';
+
     return `
-      <label>
-        ${field}
+
+      <label
+        style="
+          display:flex;
+          gap:10px;
+          align-items:center;
+          margin-top:15px;
+          margin-bottom:15px;
+        "
+      >
+
         <input
           name="${field}"
           type="checkbox"
-          ${checked}>
+          ${checked}
+          style="
+            width:auto;
+            margin:0;
+          "
+        >
+
+        <span>
+          ${label}
+        </span>
+
       </label>
+
     `;
   }
 
-  if (tab === 'products' && field === 'image_url') {
+
+  /* ======================================================
+     IMAGINE PRODUS
+  ====================================================== */
+
+  if (
+    tab === 'products' &&
+    field === 'image_url'
+  ) {
+
     let preview = '';
 
-    if (editing && value) {
+    if (
+      editing &&
+      value
+    ) {
+
       preview = `
-        <div style="margin-top:10px;">
+
+        <div
+          style="
+            margin-top:12px;
+            margin-bottom:12px;
+          "
+        >
+
+          <div
+            style="
+              font-size:12px;
+              opacity:.7;
+              margin-bottom:6px;
+            "
+          >
+            Imagine actuală:
+          </div>
+
           <img
             src="${aesc(value)}"
             alt="Imagine produs"
-            style="max-width:180px;max-height:180px;object-fit:cover;border-radius:8px;">
+            style="
+              width:180px;
+              max-width:100%;
+              height:180px;
+              object-fit:contain;
+              border-radius:8px;
+              background:#fff;
+            "
+          >
+
         </div>
+
       `;
     }
 
+
     return `
+
       <label>
+
         Imagine produs
+
         <input
           name="product_image"
           type="file"
-          accept="image/*">
+          accept="image/*"
+        >
+
       </label>
+
 
       ${
         editing
-          ? '<small>Dacă nu alegi altă imagine, rămâne imaginea actuală.</small>'
-          : '<small>Alege imaginea produsului din calculator sau telefon.</small>'
+          ? `
+            <small
+              style="
+                display:block;
+                margin-top:5px;
+                opacity:.7;
+              "
+            >
+              Dacă nu alegi altă imagine,
+              rămâne imaginea actuală.
+            </small>
+          `
+          : `
+            <small
+              style="
+                display:block;
+                margin-top:5px;
+                opacity:.7;
+              "
+            >
+              Poți alege imaginea produsului
+              din calculator sau telefon.
+            </small>
+          `
       }
+
 
       ${preview}
 
-      <input
-        name="image_url"
-        type="hidden"
-        value="${aesc(value || '')}">
+
+      <label>
+
+        URL imagine
+
+        <input
+          name="image_url"
+          type="text"
+          value="${aesc(value || '')}"
+          placeholder="https://..."
+        >
+
+      </label>
+
     `;
   }
 
+
+  /* ======================================================
+     DESCRIERE
+  ====================================================== */
+
+  if (field === 'description') {
+
+    return `
+
+      <label>
+
+        Descriere
+
+        <textarea
+          name="${field}"
+          rows="8"
+          style="
+            width:100%;
+            resize:vertical;
+          "
+        >${aesc(value || '')}</textarea>
+
+      </label>
+
+    `;
+  }
+
+
+  /* ======================================================
+     PREȚ
+  ====================================================== */
+
+  if (
+    field === 'price' ||
+    field === 'price_from'
+  ) {
+
+    return `
+
+      <label>
+
+        ${
+          field === 'price'
+            ? 'Preț'
+            : 'Preț de la'
+        }
+
+        <input
+          name="${field}"
+          type="number"
+          step="0.01"
+          min="0"
+          value="${aesc(
+            value != null
+              ? value
+              : ''
+          )}"
+          placeholder="Lasă gol pentru Cere preț"
+        >
+
+      </label>
+
+    `;
+  }
+
+
+  /* ======================================================
+     CATEGORIE
+  ====================================================== */
+
+  if (
+    tab === 'products' &&
+    field === 'category'
+  ) {
+
+    return `
+
+      <label>
+
+        Categorie
+
+        <input
+          name="category"
+          type="text"
+          value="${aesc(value || '')}"
+          placeholder="Ex: LED-uri auto"
+        >
+
+      </label>
+
+    `;
+  }
+
+
+  /* ======================================================
+     NUME PRODUS
+  ====================================================== */
+
+  if (
+    tab === 'products' &&
+    field === 'name'
+  ) {
+
+    return `
+
+      <label>
+
+        Nume produs
+
+        <input
+          name="name"
+          type="text"
+          value="${aesc(value || '')}"
+          required
+        >
+
+      </label>
+
+    `;
+  }
+
+
+  /* ======================================================
+     RESTUL CÂMPURILOR
+  ====================================================== */
+
   return `
+
     <label>
+
       ${field}
+
       <input
         name="${field}"
-        value="${aesc(value || '')}">
+        value="${aesc(value || '')}"
+      >
+
     </label>
+
   `;
 }
 
-window.newItem = function(tab) {
-  const c = tables[tab];
 
-  let fields = '';
+/* ========================================================
+   ADAUGĂ ELEMENT NOU
+======================================================== */
 
-  c.fields.forEach(function(f) {
-    fields += createFieldHtml(
-      tab,
-      f,
-      '',
-      false
+window.newItem =
+  function(tab) {
+
+    const c =
+      tables[tab];
+
+    if (!c) {
+      return;
+    }
+
+    let fields = '';
+
+
+    c.fields.forEach(
+      function(f) {
+
+        fields +=
+          createFieldHtml(
+            tab,
+            f,
+            '',
+            false
+          );
+
+      }
     );
-  });
 
-  modal(`
-    <h2>Adaugă ${c.label}</h2>
 
-    <form id="itemForm">
-      ${fields}
+    modal(`
 
-      <button class="btn primary" type="submit">
-        SALVEAZĂ
-      </button>
-    </form>
-  `);
+      <h2>
+        Adaugă ${c.label}
+      </h2>
 
-  document.getElementById('itemForm').onsubmit =
-    async function(e) {
-      e.preventDefault();
 
-      const form = document.getElementById('itemForm');
-      const saveButton = form.querySelector('button[type="submit"]');
+      <form id="itemForm">
 
-      saveButton.disabled = true;
-      saveButton.textContent = 'SE SALVEAZĂ...';
+        ${fields}
 
-      try {
-        let uploadedImageUrl = null;
 
-        if (tab === 'products') {
-          const fileInput = form.elements['product_image'];
+        <button
+          class="btn primary"
+          type="submit"
+          style="
+            width:100%;
+            margin-top:20px;
+          "
+        >
+          SALVEAZĂ
+        </button>
+
+      </form>
+
+    `);
+
+
+    document
+      .getElementById(
+        'itemForm'
+      )
+      .onsubmit =
+      async function(e) {
+
+        e.preventDefault();
+
+
+        const form =
+          document.getElementById(
+            'itemForm'
+          );
+
+        const saveButton =
+          form.querySelector(
+            'button[type="submit"]'
+          );
+
+
+        saveButton.disabled =
+          true;
+
+        saveButton.textContent =
+          'SE SALVEAZĂ...';
+
+
+        try {
+
+          let uploadedImageUrl =
+            null;
+
+
+          /* ===============================================
+             UPLOAD IMAGINE
+          =============================================== */
 
           if (
-            fileInput &&
-            fileInput.files &&
-            fileInput.files.length
+            tab === 'products'
           ) {
-            saveButton.textContent = 'SE ÎNCARCĂ IMAGINEA...';
 
-            uploadedImageUrl =
-              await uploadProductImage(fileInput.files[0]);
+            const fileInput =
+              form.elements[
+                'product_image'
+              ];
+
+
+            if (
+              fileInput &&
+              fileInput.files &&
+              fileInput.files.length
+            ) {
+
+              saveButton.textContent =
+                'SE ÎNCARCĂ IMAGINEA...';
+
+
+              uploadedImageUrl =
+                await uploadProductImage(
+                  fileInput.files[0]
+                );
+
+            }
           }
-        }
 
-        const o = {};
 
-        c.fields.forEach(function(f) {
-          const el = form.elements[f];
+          /* ===============================================
+             DATE FORMULAR
+          =============================================== */
 
-          if (!el) {
+          const o = {};
+
+
+          c.fields.forEach(
+            function(f) {
+
+              const el =
+                form.elements[f];
+
+
+              if (!el) {
+                return;
+              }
+
+
+              if (
+                el.type ===
+                'checkbox'
+              ) {
+
+                o[f] =
+                  el.checked;
+
+              } else {
+
+                const rawValue =
+                  el.value.trim();
+
+                o[f] =
+                  rawValue === ''
+                    ? null
+                    : rawValue;
+
+              }
+
+
+              if (
+                (
+                  f === 'price' ||
+                  f === 'price_from'
+                ) &&
+                o[f] != null
+              ) {
+
+                o[f] =
+                  Number(o[f]);
+
+              }
+
+            }
+          );
+
+
+          /* ===============================================
+             IMAGINE NOUĂ
+          =============================================== */
+
+          if (
+            tab === 'products' &&
+            uploadedImageUrl
+          ) {
+
+            o.image_url =
+              uploadedImageUrl;
+
+          }
+
+
+          saveButton.textContent =
+            'SE SALVEAZĂ...';
+
+
+          /* ===============================================
+             INSERT SUPABASE
+          =============================================== */
+
+          const result =
+            await sb
+              .from(tab)
+              .insert(o);
+
+
+          if (result.error) {
+
+            alert(
+              'Eroare: ' +
+              result.error.message
+            );
+
             return;
           }
 
-          if (el.type === 'checkbox') {
-            o[f] = el.checked;
-          } else {
-            o[f] = el.value || null;
+
+          const modalWrap =
+            document.querySelector(
+              '.modal-wrap'
+            );
+
+
+          if (modalWrap) {
+            modalWrap.remove();
           }
+
+
+          await renderTable(tab);
+
+          await renderDash();
+
+
+        } catch (error) {
+
+          console.error(
+            error
+          );
+
+
+          alert(
+            'Nu s-a putut salva: ' +
+            (
+              error.message ||
+              error
+            )
+          );
+
+
+        } finally {
 
           if (
-            (f === 'price' || f === 'price_from') &&
-            o[f]
+            document.body.contains(
+              saveButton
+            )
           ) {
-            o[f] = Number(o[f]);
+
+            saveButton.disabled =
+              false;
+
+            saveButton.textContent =
+              'SALVEAZĂ';
+
           }
-        });
-
-        if (tab === 'products' && uploadedImageUrl) {
-          o.image_url = uploadedImageUrl;
         }
+      };
+  };
 
-        saveButton.textContent = 'SE SALVEAZĂ...';
 
-        const result = await sb
-          .from(tab)
-          .insert(o);
+/* ========================================================
+   EDITEAZĂ ELEMENT
+======================================================== */
 
-        if (result.error) {
-          alert(result.error.message);
-          return;
-        }
+window.editItem =
+  function(tab, x) {
 
-        document
-          .querySelector('.modal-wrap')
-          .remove();
+    const c =
+      tables[tab];
 
-        renderTable(tab);
-        renderDash();
-      } catch (error) {
-        alert(
-          'Nu s-a putut încărca imaginea: ' +
-          (error.message || error)
-        );
-      } finally {
-        if (document.body.contains(saveButton)) {
-          saveButton.disabled = false;
-          saveButton.textContent = 'SALVEAZĂ';
-        }
+
+    if (!c || !x) {
+      return;
+    }
+
+
+    let fields = '';
+
+
+    c.fields.forEach(
+      function(f) {
+
+        fields +=
+          createFieldHtml(
+            tab,
+            f,
+            x[f],
+            true
+          );
+
       }
-    };
-};
-
-window.editItem = function(tab, x) {
-  const c = tables[tab];
-
-  let fields = '';
-
-  c.fields.forEach(function(f) {
-    fields += createFieldHtml(
-      tab,
-      f,
-      x[f],
-      true
     );
-  });
 
-  modal(`
-    <h2>Editează ${c.label}</h2>
 
-    <form id="itemForm">
-      ${fields}
+    modal(`
 
-      <button class="btn primary" type="submit">
-        SALVEAZĂ
-      </button>
-    </form>
-  `);
+      <div
+        style="
+          margin-bottom:20px;
+        "
+      >
 
-  document.getElementById('itemForm').onsubmit =
-    async function(e) {
-      e.preventDefault();
+        <div
+          style="
+            font-size:12px;
+            opacity:.7;
+            margin-bottom:5px;
+          "
+        >
+          EDITARE
+        </div>
 
-      const form = document.getElementById('itemForm');
-      const saveButton = form.querySelector('button[type="submit"]');
 
-      saveButton.disabled = true;
-      saveButton.textContent = 'SE SALVEAZĂ...';
+        <h2
+          style="
+            margin:0;
+          "
+        >
+          ${
+            tab === 'products'
+              ? '✏️ Editează produsul'
+              : 'Editează ' + c.label
+          }
+        </h2>
 
-      try {
-        let uploadedImageUrl = null;
+      </div>
 
-        if (tab === 'products') {
-          const fileInput = form.elements['product_image'];
+
+      <form id="itemForm">
+
+        ${fields}
+
+
+        <button
+          class="btn primary"
+          type="submit"
+          style="
+            width:100%;
+            margin-top:20px;
+            padding:14px;
+            font-weight:700;
+          "
+        >
+          💾 SALVEAZĂ MODIFICĂRILE
+        </button>
+
+      </form>
+
+    `);
+
+
+    document
+      .getElementById(
+        'itemForm'
+      )
+      .onsubmit =
+      async function(e) {
+
+        e.preventDefault();
+
+
+        const form =
+          document.getElementById(
+            'itemForm'
+          );
+
+
+        const saveButton =
+          form.querySelector(
+            'button[type="submit"]'
+          );
+
+
+        saveButton.disabled =
+          true;
+
+
+        saveButton.textContent =
+          'SE SALVEAZĂ...';
+
+
+        try {
+
+          let uploadedImageUrl =
+            null;
+
+
+          /* ===============================================
+             DACĂ AI ALES ALTĂ IMAGINE
+          =============================================== */
 
           if (
-            fileInput &&
-            fileInput.files &&
-            fileInput.files.length
+            tab === 'products'
           ) {
-            saveButton.textContent = 'SE ÎNCARCĂ IMAGINEA...';
 
-            uploadedImageUrl =
-              await uploadProductImage(fileInput.files[0]);
+            const fileInput =
+              form.elements[
+                'product_image'
+              ];
+
+
+            if (
+              fileInput &&
+              fileInput.files &&
+              fileInput.files.length
+            ) {
+
+              saveButton.textContent =
+                'SE ÎNCARCĂ IMAGINEA...';
+
+
+              uploadedImageUrl =
+                await uploadProductImage(
+                  fileInput.files[0]
+                );
+
+            }
           }
-        }
 
-        const o = {};
 
-        c.fields.forEach(function(f) {
-          const el = form.elements[f];
+          /* ===============================================
+             CITIM TOATE CÂMPURILE
+          =============================================== */
 
-          if (!el) {
+          const o = {};
+
+
+          c.fields.forEach(
+            function(f) {
+
+              const el =
+                form.elements[f];
+
+
+              if (!el) {
+                return;
+              }
+
+
+              if (
+                el.type ===
+                'checkbox'
+              ) {
+
+                o[f] =
+                  el.checked;
+
+              } else {
+
+                const rawValue =
+                  el.value.trim();
+
+
+                o[f] =
+                  rawValue === ''
+                    ? null
+                    : rawValue;
+
+              }
+
+
+              /* ===========================================
+                 PREȚ NUMERIC
+              =========================================== */
+
+              if (
+                (
+                  f === 'price' ||
+                  f === 'price_from'
+                ) &&
+                o[f] != null
+              ) {
+
+                o[f] =
+                  Number(o[f]);
+
+              }
+
+            }
+          );
+
+
+          /* ===============================================
+             DACĂ AM ÎNCĂRCAT ALTĂ IMAGINE
+          =============================================== */
+
+          if (
+            tab === 'products' &&
+            uploadedImageUrl
+          ) {
+
+            o.image_url =
+              uploadedImageUrl;
+
+          }
+
+
+          saveButton.textContent =
+            'SE SALVEAZĂ...';
+
+
+          /* ===============================================
+             UPDATE SUPABASE
+          =============================================== */
+
+          const result =
+            await sb
+              .from(tab)
+              .update(o)
+              .eq(
+                'id',
+                x.id
+              );
+
+
+          if (result.error) {
+
+            console.error(
+              'Eroare editare:',
+              result.error
+            );
+
+
+            alert(
+              'Nu s-a putut salva: ' +
+              result.error.message
+            );
+
             return;
           }
 
-          if (el.type === 'checkbox') {
-            o[f] = el.checked;
-          } else {
-            o[f] = el.value || null;
+
+          /* ===============================================
+             ÎNCHIDEM MODALUL
+          =============================================== */
+
+          const modalWrap =
+            document.querySelector(
+              '.modal-wrap'
+            );
+
+
+          if (modalWrap) {
+            modalWrap.remove();
           }
+
+
+          /* ===============================================
+             REÎNCĂRCĂM LISTA
+          =============================================== */
+
+          await renderTable(tab);
+
+          await renderDash();
+
+
+        } catch (error) {
+
+          console.error(
+            'Eroare editare produs:',
+            error
+          );
+
+
+          alert(
+            'Nu s-a putut salva modificarea: ' +
+            (
+              error.message ||
+              error
+            )
+          );
+
+
+        } finally {
 
           if (
-            (f === 'price' || f === 'price_from') &&
-            o[f]
+            document.body.contains(
+              saveButton
+            )
           ) {
-            o[f] = Number(o[f]);
+
+            saveButton.disabled =
+              false;
+
+            saveButton.textContent =
+              '💾 SALVEAZĂ MODIFICĂRILE';
+
           }
-        });
-
-        if (tab === 'products' && uploadedImageUrl) {
-          o.image_url = uploadedImageUrl;
         }
+      };
+  };
 
-        saveButton.textContent = 'SE SALVEAZĂ...';
 
-        const result = await sb
-          .from(tab)
-          .update(o)
-          .eq('id', x.id);
+/* ========================================================
+   ȘTERGE ELEMENT
+======================================================== */
 
-        if (result.error) {
-          alert(result.error.message);
-          return;
-        }
+window.deleteItem =
+  async function(
+    tab,
+    id
+  ) {
 
-        document
-          .querySelector('.modal-wrap')
-          .remove();
+    if (
+      !confirm(
+        'Sigur vrei să ștergi?'
+      )
+    ) {
+      return;
+    }
 
-        renderTable(tab);
-      } catch (error) {
-        alert(
-          'Nu s-a putut încărca imaginea: ' +
-          (error.message || error)
+
+    const result =
+      await sb
+        .from(tab)
+        .delete()
+        .eq(
+          'id',
+          id
         );
-      } finally {
-        if (document.body.contains(saveButton)) {
-          saveButton.disabled = false;
-          saveButton.textContent = 'SALVEAZĂ';
-        }
-      }
-    };
-};
 
-window.deleteItem = async function(tab, id) {
-  if (!confirm('Sigur vrei să ștergi?')) {
-    return;
-  }
 
-  const result = await sb
-    .from(tab)
-    .delete()
-    .eq('id', id);
+    if (result.error) {
 
-  if (result.error) {
-    alert(result.error.message);
-    return;
-  }
-
-  renderTable(tab);
-  renderDash();
-};
-
-window.openTab = async function(tab) {
-  current = tab;
-
-  document
-    .querySelectorAll('.tab')
-    .forEach(function(x) {
-      x.classList.add('hidden');
-    });
-
-  const target = document.getElementById(tab);
-
-  if (!target) {
-    console.error(
-      'Nu există secțiunea cu id="' + tab + '" în admin.html'
-    );
-    return;
-  }
-
-  target.classList.remove('hidden');
-
-  document
-    .querySelectorAll('aside button[data-tab]')
-    .forEach(function(x) {
-      x.classList.toggle(
-        'active',
-        x.dataset.tab === tab
+      alert(
+        'Nu s-a putut șterge: ' +
+        result.error.message
       );
-    });
 
-  if (tab === 'dash') {
-    renderDash();
-  } else if (tab === 'quotes') {
-    renderQuotes();
-  } else if (tab === 'orders') {
-    renderOrders();
-  } else {
-    renderTable(tab);
-  }
-};
+      return;
+    }
+
+
+    await renderTable(tab);
+
+    await renderDash();
+  };
+
+
+/* ========================================================
+   DESCHIDERE TAB
+======================================================== */
+
+window.openTab =
+  async function(tab) {
+
+    current = tab;
+
+
+    document
+      .querySelectorAll(
+        '.tab'
+      )
+      .forEach(
+        function(x) {
+
+          x.classList.add(
+            'hidden'
+          );
+
+        }
+      );
+
+
+    const target =
+      document.getElementById(
+        tab
+      );
+
+
+    if (!target) {
+
+      console.error(
+        'Nu există secțiunea cu id="' +
+        tab +
+        '" în admin.html'
+      );
+
+      return;
+    }
+
+
+    target.classList.remove(
+      'hidden'
+    );
+
+
+    document
+      .querySelectorAll(
+        'aside button[data-tab]'
+      )
+      .forEach(
+        function(x) {
+
+          x.classList.toggle(
+            'active',
+            x.dataset.tab === tab
+          );
+
+        }
+      );
+
+
+    if (tab === 'dash') {
+
+      await renderDash();
+
+    } else if (
+      tab === 'quotes'
+    ) {
+
+      await renderQuotes();
+
+    } else if (
+      tab === 'orders'
+    ) {
+
+      await renderOrders();
+
+    } else {
+
+      await renderTable(tab);
+
+    }
+  };
+
+
+/* ========================================================
+   PORNIRE ADMIN
+======================================================== */
 
 document.addEventListener(
   'DOMContentLoaded',
   async function() {
-    const u = await requireUser();
+
+    const u =
+      await requireUser();
+
 
     if (!u) {
       return;
     }
 
-    document
-      .querySelectorAll('aside button[data-tab]')
-      .forEach(function(b) {
-        b.onclick = function() {
-          openTab(b.dataset.tab);
-        };
-      });
 
-    document.getElementById('logout').onclick =
-      async function() {
-        await sb.auth.signOut();
-        location.reload();
-      };
+    /* ====================================================
+       BUTOANE MENIU
+    ==================================================== */
+
+    document
+      .querySelectorAll(
+        'aside button[data-tab]'
+      )
+      .forEach(
+        function(b) {
+
+          b.onclick =
+            function() {
+
+              openTab(
+                b.dataset.tab
+              );
+
+            };
+
+        }
+      );
+
+
+    /* ====================================================
+       LOGOUT
+    ==================================================== */
+
+    const logout =
+      document.getElementById(
+        'logout'
+      );
+
+
+    if (logout) {
+
+      logout.onclick =
+        async function() {
+
+          await sb.auth
+            .signOut();
+
+          location.reload();
+
+        };
+    }
+
+
+    /* ====================================================
+       DESCHIDEM DASHBOARD
+    ==================================================== */
 
     openTab('dash');
   }
