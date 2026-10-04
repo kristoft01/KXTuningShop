@@ -348,33 +348,23 @@ async function renderDash() {
 
         <div class="quick">
 
-          <button
-            onclick="openTab('products')"
-          >
+          <button onclick="openTab('products')">
             + Adaugă produs
           </button>
 
-          <button
-            onclick="openTab('services')"
-          >
+          <button onclick="openTab('services')">
             + Adaugă serviciu
           </button>
 
-          <button
-            onclick="openTab('projects')"
-          >
+          <button onclick="openTab('projects')">
             + Adaugă lucrare
           </button>
 
-          <button
-            onclick="openTab('quotes')"
-          >
+          <button onclick="openTab('quotes')">
             Vezi cereri
           </button>
 
-          <button
-            onclick="openTab('orders')"
-          >
+          <button onclick="openTab('orders')">
             🛒 Vezi comenzi
           </button>
 
@@ -420,6 +410,7 @@ async function renderTable(tab) {
 
   let rows = '';
 
+
   data.forEach(
     function(x) {
 
@@ -428,73 +419,201 @@ async function renderTable(tab) {
         x.title ||
         'Fără nume';
 
+
       let priceText = '';
 
       if (x.price != null) {
+
         priceText =
           aesc(x.price) +
           ' lei';
+
       } else if (
         x.price_from != null
       ) {
+
         priceText =
           'de ' +
           aesc(x.price_from) +
           ' lei';
+
       } else if (
         tab === 'products'
       ) {
+
         priceText =
           'Cere preț';
+
       }
 
 
-      /* ===============================
-         CARD / RÂND PRODUS
-      =============================== */
+      /* ==================================================
+         PRODUSE
+         FĂRĂ DESCRIERE ÎN TABEL
+      ================================================== */
+
+      if (tab === 'products') {
+
+        rows += `
+
+          <tr>
+
+            <td
+              style="
+                width:40%;
+                vertical-align:middle;
+              "
+            >
+
+              <div
+                style="
+                  display:flex;
+                  align-items:center;
+                  gap:12px;
+                "
+              >
+
+                ${
+                  x.image_url
+                    ? `
+                      <img
+                        src="${aesc(x.image_url)}"
+                        alt="${aesc(itemName)}"
+                        style="
+                          width:65px;
+                          height:65px;
+                          flex:0 0 65px;
+                          object-fit:contain;
+                          border-radius:8px;
+                          background:#fff;
+                        "
+                      >
+                    `
+                    : `
+                      <div
+                        style="
+                          width:65px;
+                          height:65px;
+                          flex:0 0 65px;
+                          border-radius:8px;
+                          display:flex;
+                          align-items:center;
+                          justify-content:center;
+                          background:rgba(255,255,255,.05);
+                          font-size:11px;
+                          text-align:center;
+                        "
+                      >
+                        Fără imagine
+                      </div>
+                    `
+                }
+
+
+                <div>
+
+                  <b>
+                    ${aesc(itemName)}
+                  </b>
+
+                </div>
+
+              </div>
+
+            </td>
+
+
+            <td
+              style="
+                width:20%;
+                vertical-align:middle;
+              "
+            >
+              ${aesc(
+                x.category ||
+                'Fără categorie'
+              )}
+            </td>
+
+
+            <td
+              style="
+                width:15%;
+                vertical-align:middle;
+                white-space:nowrap;
+              "
+            >
+
+              <b>
+                ${priceText}
+              </b>
+
+            </td>
+
+
+            <td
+              style="
+                width:25%;
+                vertical-align:middle;
+                white-space:nowrap;
+              "
+            >
+
+              <button
+                type="button"
+                class="btn primary"
+                style="
+                  display:inline-block;
+                  margin:3px;
+                  padding:9px 12px;
+                "
+                onclick='editItem(
+                  ${JSON.stringify(tab)},
+                  ${JSON.stringify(x)}
+                )'
+              >
+                ✏️ EDITEAZĂ
+              </button>
+
+
+              <button
+                type="button"
+                class="danger"
+                style="
+                  display:inline-block;
+                  margin:3px;
+                  padding:9px 12px;
+                "
+                onclick='deleteItem(
+                  ${JSON.stringify(tab)},
+                  ${JSON.stringify(x.id)}
+                )'
+              >
+                🗑️ ȘTERGE
+              </button>
+
+            </td>
+
+          </tr>
+
+        `;
+
+        return;
+      }
+
+
+      /* ==================================================
+         SERVICII / LUCRĂRI
+      ================================================== */
 
       rows += `
 
         <tr>
 
           <td>
-
-            ${
-              tab === 'products' &&
-              x.image_url
-                ? `
-                  <img
-                    src="${aesc(x.image_url)}"
-                    alt="${aesc(itemName)}"
-                    style="
-                      width:70px;
-                      height:70px;
-                      object-fit:cover;
-                      border-radius:8px;
-                      display:block;
-                      margin-bottom:8px;
-                    "
-                  >
-                `
-                : ''
-            }
-
             <b>
               ${aesc(itemName)}
             </b>
-
-            ${
-              tab === 'products' &&
-              x.category
-                ? `
-                  <br>
-                  <small>
-                    ${aesc(x.category)}
-                  </small>
-                `
-                : ''
-            }
-
           </td>
 
 
@@ -516,7 +635,6 @@ async function renderTable(tab) {
 
           <td
             style="
-              min-width:190px;
               white-space:nowrap;
             "
           >
@@ -525,9 +643,9 @@ async function renderTable(tab) {
               type="button"
               class="btn primary"
               style="
+                display:inline-block;
                 margin:3px;
                 padding:9px 12px;
-                display:inline-block;
               "
               onclick='editItem(
                 ${JSON.stringify(tab)},
@@ -542,9 +660,9 @@ async function renderTable(tab) {
               type="button"
               class="danger"
               style="
+                display:inline-block;
                 margin:3px;
                 padding:9px 12px;
-                display:inline-block;
               "
               onclick='deleteItem(
                 ${JSON.stringify(tab)},
@@ -564,6 +682,7 @@ async function renderTable(tab) {
 
 
   if (!rows) {
+
     rows = `
       <tr>
         <td colspan="4">
@@ -571,7 +690,28 @@ async function renderTable(tab) {
         </td>
       </tr>
     `;
+
   }
+
+
+  const tableHead =
+    tab === 'products'
+      ? `
+        <tr>
+          <th>Produs</th>
+          <th>Categorie</th>
+          <th>Preț</th>
+          <th>Acțiuni</th>
+        </tr>
+      `
+      : `
+        <tr>
+          <th>Nume</th>
+          <th>Descriere</th>
+          <th>Preț</th>
+          <th>Acțiuni</th>
+        </tr>
+      `;
 
 
   document
@@ -614,34 +754,13 @@ async function renderTable(tab) {
         <table
           style="
             width:100%;
-            min-width:750px;
+            table-layout:auto;
           "
         >
 
           <thead>
-
-            <tr>
-
-              <th>
-                Nume
-              </th>
-
-              <th>
-                Descriere
-              </th>
-
-              <th>
-                Preț
-              </th>
-
-              <th>
-                ACȚIUNI
-              </th>
-
-            </tr>
-
+            ${tableHead}
           </thead>
-
 
           <tbody>
             ${rows}
@@ -674,6 +793,7 @@ async function renderQuotes() {
     result.data || [];
 
   let rows = '';
+
 
   data.forEach(
     function(x) {
@@ -726,6 +846,7 @@ async function renderQuotes() {
 
 
   if (result.error) {
+
     rows = `
       <tr>
         <td colspan="5">
@@ -735,10 +856,12 @@ async function renderQuotes() {
         </td>
       </tr>
     `;
+
   }
 
 
   if (!rows) {
+
     rows = `
       <tr>
         <td colspan="5">
@@ -746,6 +869,7 @@ async function renderQuotes() {
         </td>
       </tr>
     `;
+
   }
 
 
@@ -756,6 +880,7 @@ async function renderQuotes() {
       <div class="page-head">
 
         <div>
+
           <div class="eyebrow">
             ADMIN
           </div>
@@ -763,6 +888,7 @@ async function renderQuotes() {
           <h1>
             Cereri de ofertă
           </h1>
+
         </div>
 
       </div>
@@ -776,6 +902,7 @@ async function renderQuotes() {
         <table>
 
           <thead>
+
             <tr>
               <th>Client</th>
               <th>Mașină</th>
@@ -783,6 +910,7 @@ async function renderQuotes() {
               <th>Telefon</th>
               <th>Data</th>
             </tr>
+
           </thead>
 
           <tbody>
@@ -801,8 +929,10 @@ async function renderQuotes() {
     );
 
   if (badge) {
+
     badge.textContent =
       data.length;
+
   }
 }
 
@@ -815,6 +945,7 @@ async function updateOrderStatus(
   id,
   status
 ) {
+
   const result =
     await sb
       .from('orders')
@@ -826,7 +957,9 @@ async function updateOrderStatus(
         id
       );
 
+
   if (result.error) {
+
     alert(
       'Nu s-a putut schimba statusul: ' +
       result.error.message
@@ -837,8 +970,10 @@ async function updateOrderStatus(
     return;
   }
 
+
   renderOrders();
 }
+
 
 window.updateOrderStatus =
   updateOrderStatus;
@@ -849,10 +984,12 @@ window.updateOrderStatus =
 ======================================================== */
 
 async function deleteOrder(id) {
+
   const confirmDelete =
     confirm(
       'Sigur vrei să ștergi această comandă?'
     );
+
 
   if (!confirmDelete) {
     return;
@@ -868,7 +1005,9 @@ async function deleteOrder(id) {
         id
       );
 
+
   if (itemsResult.error) {
+
     alert(
       'Nu s-au putut șterge produsele comenzii: ' +
       itemsResult.error.message
@@ -887,7 +1026,9 @@ async function deleteOrder(id) {
         id
       );
 
+
   if (orderResult.error) {
+
     alert(
       'Nu s-a putut șterge comanda: ' +
       orderResult.error.message
@@ -896,9 +1037,12 @@ async function deleteOrder(id) {
     return;
   }
 
+
   await renderOrders();
+
   await renderDash();
 }
+
 
 window.deleteOrder =
   deleteOrder;
@@ -909,6 +1053,7 @@ window.deleteOrder =
 ======================================================== */
 
 async function renderOrders() {
+
   const result =
     await sb
       .from('orders')
@@ -920,7 +1065,9 @@ async function renderOrders() {
         }
       );
 
+
   if (result.error) {
+
     document
       .getElementById('orders')
       .innerHTML = `
@@ -928,6 +1075,7 @@ async function renderOrders() {
         <div class="page-head">
 
           <div>
+
             <div class="eyebrow">
               ADMIN
             </div>
@@ -935,9 +1083,11 @@ async function renderOrders() {
             <h1>
               Comenzi
             </h1>
+
           </div>
 
         </div>
+
 
         <div class="panel">
 
@@ -957,6 +1107,7 @@ async function renderOrders() {
   const orders =
     result.data || [];
 
+
   let rows = '';
 
 
@@ -965,8 +1116,10 @@ async function renderOrders() {
     i < orders.length;
     i++
   ) {
+
     const order =
       orders[i];
+
 
     const itemResult =
       await sb
@@ -986,7 +1139,9 @@ async function renderOrders() {
 
     let products = '';
 
+
     if (itemResult.error) {
+
       products =
         'Eroare la produsele comenzii';
 
@@ -1016,8 +1171,10 @@ async function renderOrders() {
       );
 
     } else {
+
       products =
         'Fără produse';
+
     }
 
 
@@ -1100,8 +1257,7 @@ async function renderOrders() {
             <option
               value="procesare"
               ${
-                status ===
-                'procesare'
+                status === 'procesare'
                   ? 'selected'
                   : ''
               }
@@ -1113,8 +1269,7 @@ async function renderOrders() {
             <option
               value="finalizata"
               ${
-                status ===
-                'finalizata'
+                status === 'finalizata'
                   ? 'selected'
                   : ''
               }
@@ -1126,8 +1281,7 @@ async function renderOrders() {
             <option
               value="anulata"
               ${
-                status ===
-                'anulata'
+                status === 'anulata'
                   ? 'selected'
                   : ''
               }
@@ -1171,11 +1325,13 @@ async function renderOrders() {
         </td>
 
       </tr>
+
     `;
   }
 
 
   if (!rows) {
+
     rows = `
       <tr>
         <td colspan="7">
@@ -1183,6 +1339,7 @@ async function renderOrders() {
         </td>
       </tr>
     `;
+
   }
 
 
@@ -1193,6 +1350,7 @@ async function renderOrders() {
       <div class="page-head">
 
         <div>
+
           <div class="eyebrow">
             ADMIN
           </div>
@@ -1200,6 +1358,7 @@ async function renderOrders() {
           <h1>
             Comenzi
           </h1>
+
         </div>
 
       </div>
@@ -1226,6 +1385,7 @@ async function renderOrders() {
 
           </thead>
 
+
           <tbody>
             ${rows}
           </tbody>
@@ -1242,19 +1402,23 @@ async function renderOrders() {
 ======================================================== */
 
 function modal(html) {
+
   const d =
     document.createElement(
       'div'
     );
 
+
   d.className =
     'modal-wrap';
+
 
   d.innerHTML =
     '<div class="modal">' +
     '<button class="x" onclick="this.closest(\'.modal-wrap\').remove()">×</button>' +
     html +
     '</div>';
+
 
   document.body.appendChild(d);
 } 
@@ -1274,10 +1438,6 @@ function createFieldHtml(
     field === 'active';
 
 
-  /* ======================================================
-     CHECKBOX
-  ====================================================== */
-
   if (checkbox) {
 
     const checked =
@@ -1289,10 +1449,12 @@ function createFieldHtml(
           )
         : 'checked';
 
+
     const label =
       field === 'available'
         ? 'Produs disponibil'
         : 'Activ';
+
 
     return `
 
@@ -1337,6 +1499,7 @@ function createFieldHtml(
 
     let preview = '';
 
+
     if (
       editing &&
       value
@@ -1360,6 +1523,7 @@ function createFieldHtml(
           >
             Imagine actuală:
           </div>
+
 
           <img
             src="${aesc(value)}"
@@ -1510,7 +1674,7 @@ function createFieldHtml(
 
 
   /* ======================================================
-     CATEGORIE
+     CATEGORIE PRODUS
   ====================================================== */
 
   if (
@@ -1587,7 +1751,7 @@ function createFieldHtml(
 
 
 /* ========================================================
-   ADAUGĂ ELEMENT NOU
+   ADAUGĂ ELEMENT
 ======================================================== */
 
 window.newItem =
@@ -1596,9 +1760,11 @@ window.newItem =
     const c =
       tables[tab];
 
+
     if (!c) {
       return;
     }
+
 
     let fields = '';
 
@@ -1661,6 +1827,7 @@ window.newItem =
             'itemForm'
           );
 
+
         const saveButton =
           form.querySelector(
             'button[type="submit"]'
@@ -1669,6 +1836,7 @@ window.newItem =
 
         saveButton.disabled =
           true;
+
 
         saveButton.textContent =
           'SE SALVEAZĂ...';
@@ -1681,7 +1849,7 @@ window.newItem =
 
 
           /* ===============================================
-             UPLOAD IMAGINE
+             UPLOAD IMAGINE PRODUS
           =============================================== */
 
           if (
@@ -1744,6 +1912,7 @@ window.newItem =
 
                 const rawValue =
                   el.value.trim();
+
 
                 o[f] =
                   rawValue === ''
@@ -1873,7 +2042,10 @@ window.editItem =
       tables[tab];
 
 
-    if (!c || !x) {
+    if (
+      !c ||
+      !x
+    ) {
       return;
     }
 
@@ -1920,11 +2092,13 @@ window.editItem =
             margin:0;
           "
         >
+
           ${
             tab === 'products'
               ? '✏️ Editează produsul'
               : 'Editează ' + c.label
           }
+
         </h2>
 
       </div>
@@ -1990,7 +2164,7 @@ window.editItem =
 
 
           /* ===============================================
-             DACĂ AI ALES ALTĂ IMAGINE
+             IMAGINE NOUĂ
           =============================================== */
 
           if (
@@ -2023,7 +2197,7 @@ window.editItem =
 
 
           /* ===============================================
-             CITIM TOATE CÂMPURILE
+             CITIM CÂMPURILE
           =============================================== */
 
           const o = {};
@@ -2064,7 +2238,7 @@ window.editItem =
 
 
               /* ===========================================
-                 PREȚ NUMERIC
+                 PREȚ
               =========================================== */
 
               if (
@@ -2085,7 +2259,7 @@ window.editItem =
 
 
           /* ===============================================
-             DACĂ AM ÎNCĂRCAT ALTĂ IMAGINE
+             PĂSTRĂM / SCHIMBĂM IMAGINEA
           =============================================== */
 
           if (
@@ -2135,7 +2309,7 @@ window.editItem =
 
 
           /* ===============================================
-             ÎNCHIDEM MODALUL
+             ÎNCHIDEM FEREASTRA
           =============================================== */
 
           const modalWrap =
@@ -2150,7 +2324,7 @@ window.editItem =
 
 
           /* ===============================================
-             REÎNCĂRCĂM LISTA
+             ACTUALIZĂM ADMINUL
           =============================================== */
 
           await renderTable(tab);
@@ -2161,7 +2335,7 @@ window.editItem =
         } catch (error) {
 
           console.error(
-            'Eroare editare produs:',
+            'Eroare editare:',
             error
           );
 
@@ -2185,6 +2359,7 @@ window.editItem =
 
             saveButton.disabled =
               false;
+
 
             saveButton.textContent =
               '💾 SALVEAZĂ MODIFICĂRILE';
@@ -2305,7 +2480,9 @@ window.openTab =
       );
 
 
-    if (tab === 'dash') {
+    if (
+      tab === 'dash'
+    ) {
 
       await renderDash();
 
@@ -2347,7 +2524,7 @@ document.addEventListener(
 
 
     /* ====================================================
-       BUTOANE MENIU
+       MENIU ADMIN
     ==================================================== */
 
     document
