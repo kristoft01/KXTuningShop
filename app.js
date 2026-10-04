@@ -435,11 +435,6 @@ function addToCart(product) {
 
   saveCart();
 
-  /*
-    Dacă produsul este deschis în fereastra mare,
-    îl închidem înainte să deschidem coșul.
-  */
-
   closeProductModal();
 
   const overlay =
@@ -798,7 +793,9 @@ function updatePaymentMethod() {
         'PLASEAZĂ COMANDA →';
     }
   }
-} 
+}
+
+
 /* ========================================================
    PLASEAZĂ COMANDA
 ======================================================== */
@@ -954,27 +951,13 @@ async function placeOrder() {
     .from('orders')
     .insert({
       id: orderId,
-
-      customer_name:
-        name,
-
-      customer_email:
-        email,
-
-      customer_phone:
-        phone,
-
-      customer_address:
-        address,
-
-      total:
-        total,
-
-      status:
-        'new',
-
-      notes:
-        finalNotes
+      customer_name: name,
+      customer_email: email,
+      customer_phone: phone,
+      customer_address: address,
+      total: total,
+      status: 'new',
+      notes: finalNotes
     });
 
   if (orderError) {
@@ -1001,20 +984,11 @@ async function placeOrder() {
 
   const items =
     cart.map(item => ({
-      order_id:
-        orderId,
-
-      product_id:
-        item.id,
-
-      product_name:
-        item.name,
-
-      quantity:
-        item.quantity,
-
-      price:
-        Number(item.price) || 0
+      order_id: orderId,
+      product_id: item.id,
+      product_name: item.name,
+      quantity: item.quantity,
+      price: Number(item.price) || 0
     }));
 
   const {
@@ -1051,38 +1025,17 @@ async function placeOrder() {
         'order-notification',
         {
           body: {
-            order_id:
-              orderId,
-
-            customer_name:
-              name,
-
-            customer_email:
-              email,
-
-            customer_phone:
-              phone,
-
-            customer_address:
-              address,
-
-            total:
-              total.toFixed(2),
-
-            subtotal:
-              subtotal.toFixed(2),
-
-            shipping:
-              shipping.toFixed(2),
-
-            free_shipping:
-              shipping === 0,
-
-            notes:
-              finalNotes,
-
-            payment_method:
-              paymentText,
+            order_id: orderId,
+            customer_name: name,
+            customer_email: email,
+            customer_phone: phone,
+            customer_address: address,
+            total: total.toFixed(2),
+            subtotal: subtotal.toFixed(2),
+            shipping: shipping.toFixed(2),
+            free_shipping: shipping === 0,
+            notes: finalNotes,
+            payment_method: paymentText,
 
             items:
               items.map(item => ({
@@ -1324,20 +1277,10 @@ function openProductModal(productId) {
     Number.isFinite(price);
 
   const productForCart = {
-    id:
-      product.id,
-
-    name:
-      product.name,
-
-    price:
-      price
+    id: product.id,
+    name: product.name,
+    price: price
   };
-
-
-  /* =========================
-     WHATSAPP PRODUS
-  ========================= */
 
   const whatsappText =
     `Salut! Sunt interesat de produsul:\n\n` +
@@ -1346,14 +1289,7 @@ function openProductModal(productId) {
     `Aș dori mai multe informații și prețul.`;
 
   const whatsappUrl =
-    whatsapp(
-      whatsappText
-    );
-
-
-  /* =========================
-     IMAGINE
-  ========================= */
+    whatsapp(whatsappText);
 
   const imageHtml =
     product.image_url
@@ -1370,11 +1306,6 @@ function openProductModal(productId) {
         </div>
       `;
 
-
-  /* =========================
-     PREȚ
-  ========================= */
-
   const priceHtml =
     hasPrice
       ? `
@@ -1387,11 +1318,6 @@ function openProductModal(productId) {
           Cere preț
         </div>
       `;
-
-
-  /* =========================
-     BUTON
-  ========================= */
 
   const actionHtml =
     hasPrice
@@ -1415,11 +1341,6 @@ function openProductModal(productId) {
         </a>
       `;
 
-
-  /* =========================
-     CONȚINUT
-  ========================= */
-
   content.innerHTML = `
 
     <div class="product-detail-image-wrap">
@@ -1427,7 +1348,6 @@ function openProductModal(productId) {
       ${imageHtml}
 
     </div>
-
 
     <div class="product-detail-info">
 
@@ -1437,7 +1357,6 @@ function openProductModal(productId) {
           'Produs'
         )}
       </div>
-
 
       <h2
         id="productModalTitle"
@@ -1449,30 +1368,11 @@ function openProductModal(productId) {
         )}
       </h2>
 
-
       ${priceHtml}
 
-
-      <div class="product-detail-description-title">
-        DESCRIERE
-      </div>
-
-
-      <p class="product-detail-description">
-        ${
-          product.description
-            ? esc(product.description)
-            : 'Nu există descriere pentru acest produs.'
-        }
-      </p>
-
-
       <div class="product-detail-actions">
-
         ${actionHtml}
-
       </div>
-
 
       ${
         hasPrice
@@ -1488,15 +1388,21 @@ function openProductModal(productId) {
           `
       }
 
+      <div class="product-detail-description-title">
+        DESCRIERE
+      </div>
+
+      <p class="product-detail-description">
+        ${
+          product.description
+            ? esc(product.description)
+            : 'Nu există descriere pentru acest produs.'
+        }
+      </p>
+
     </div>
 
   `;
-
-
-  /*
-    Nu folosim onclick cu JSON în HTML pentru butonul
-    de cumpărare. Îl conectăm direct aici.
-  */
 
   if (hasPrice) {
     const addButton =
@@ -1518,11 +1424,6 @@ function openProductModal(productId) {
     }
   }
 
-
-  /* =========================
-     DESCHIDERE MODAL
-  ========================= */
-
   overlay.classList.remove(
     'hidden'
   );
@@ -1530,12 +1431,6 @@ function openProductModal(productId) {
   document.body.classList.add(
     'no-scroll'
   );
-
-
-  /*
-    Pe telefon / desktop începem de sus
-    de fiecare dată când deschidem produsul.
-  */
 
   const modalBox =
     document.getElementById(
@@ -1565,12 +1460,6 @@ function closeProductModal() {
   overlay.classList.add(
     'hidden'
   );
-
-
-  /*
-    Scoatem no-scroll doar dacă nu este deschis
-    și coșul sau meniul mobil.
-  */
 
   const cartOverlay =
     document.getElementById(
@@ -1622,9 +1511,7 @@ function closeProductFromOverlay(event) {
   if (event.target === overlay) {
     closeProductModal();
   }
-}
-
-
+} 
 /* ========================================================
    CATEGORII PRODUSE
 ======================================================== */
@@ -1805,14 +1692,9 @@ function createProductCard(x) {
     Number.isFinite(price);
 
   const productForCart = {
-    id:
-      x.id,
-
-    name:
-      x.name,
-
-    price:
-      price
+    id: x.id,
+    name: x.name,
+    price: price
   };
 
   return `
@@ -1854,10 +1736,6 @@ function createProductCard(x) {
         <h3>
           ${esc(x.name)}
         </h3>
-
-        <p>
-          ${esc(x.description || '')}
-        </p>
 
         <strong>
           ${
@@ -1990,7 +1868,9 @@ function loadMoreProducts() {
     PRODUCTS_PER_PAGE;
 
   renderProducts();
-} 
+}
+
+
 /* ========================================================
    ÎNCĂRCARE SITE
 ======================================================== */
